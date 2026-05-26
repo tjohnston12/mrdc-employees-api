@@ -27,6 +27,12 @@ module.exports = async function handler(req, res) {
     if (!data.records?.length) return res.status(401).json({ error: 'Invalid username or password' });
 
     const rec = data.records[0];
+
+    // Check if account is active
+    if (rec.fields['Active'] === false) {
+      return res.status(401).json({ error: 'Your account has been deactivated. Please contact your administrator.' });
+    }
+
     if (sha256(password) !== (rec.fields['Password Hash'] || ''))
       return res.status(401).json({ error: 'Invalid username or password' });
 
