@@ -24,7 +24,22 @@ function mapRecord(r) {
     emergencyPhone: r.fields['Emergency Contact Phone'] || '',
     emergencyRelation: r.fields['Emergency Contact Relation'] || '',
     startDate: r.fields['Start Date'] || '',
-    notes: r.fields['Notes'] || ''
+    notes: r.fields['Notes'] || '',
+    active: r.fields['Active'] !== false,
+    // Driver's license — admin only
+    licenseNumber: r.fields['License Number'] || '',
+    licenseClass: r.fields['License Class'] || '',
+    licenseExpiry: r.fields['License Expiry'] || '',
+    licenseProvince: r.fields['License Province'] || '',
+    licenseRestrictions: r.fields['License Restrictions'] || '',
+    // Abstract
+    abstractDate: r.fields['Abstract Date'] || '',
+    abstractFile: (r.fields['Abstract File'] || [])[0]?.url || '',
+    // Manager & depot
+    manager: r.fields['Manager'] || '',
+    depot: r.fields['Depot'] || '',
+    // Training link
+    trainingEmployeeId: r.fields['Training Employee ID'] || ''
   };
 }
 
@@ -65,7 +80,7 @@ module.exports = async function handler(req, res) {
           'Phone': phone||'', 'Email': email||'',
           'Emergency Contact Name': emergencyName||'', 'Emergency Contact Phone': emergencyPhone||'',
           'Emergency Contact Relation': emergencyRelation||'',
-          'Start Date': startDate||'', 'Notes': notes||''
+          'Start Date': startDate||'', 'Notes': notes||'', 'Active': true
         }})
       });
       return res.status(200).json(mapRecord(data));
@@ -86,6 +101,16 @@ module.exports = async function handler(req, res) {
       if (fields.emergencyRelation !== undefined) airtableFields['Emergency Contact Relation'] = fields.emergencyRelation;
       if (fields.startDate !== undefined) airtableFields['Start Date'] = fields.startDate;
       if (fields.notes !== undefined) airtableFields['Notes'] = fields.notes;
+      if (fields.active !== undefined) airtableFields['Active'] = fields.active;
+      if (fields.licenseNumber !== undefined) airtableFields['License Number'] = fields.licenseNumber;
+      if (fields.licenseClass !== undefined) airtableFields['License Class'] = fields.licenseClass;
+      if (fields.licenseExpiry !== undefined) airtableFields['License Expiry'] = fields.licenseExpiry;
+      if (fields.licenseProvince !== undefined) airtableFields['License Province'] = fields.licenseProvince;
+      if (fields.licenseRestrictions !== undefined) airtableFields['License Restrictions'] = fields.licenseRestrictions;
+      if (fields.abstractDate !== undefined) airtableFields['Abstract Date'] = fields.abstractDate;
+      if (fields.manager !== undefined) airtableFields['Manager'] = fields.manager;
+      if (fields.depot !== undefined) airtableFields['Depot'] = fields.depot;
+      if (fields.trainingEmployeeId !== undefined) airtableFields['Training Employee ID'] = fields.trainingEmployeeId;
       const data = await at(`${table}/${id}`, {
         method: 'PATCH',
         body: JSON.stringify({ fields: airtableFields })
