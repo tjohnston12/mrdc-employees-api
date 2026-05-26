@@ -1,0 +1,6 @@
+{
+  "name": "mrdc-employees-api",
+  "version": "1.0.0",
+  "description": "Backend API for MRDC Employees app",
+  "engines": { "node": "20.x" }
+}
