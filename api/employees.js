@@ -32,6 +32,8 @@ function mapRecord(r) {
     licenseExpiry: r.fields['License Expiry'] || '',
     licenseProvince: r.fields['License Province'] || '',
     licenseRestrictions: r.fields['License Restrictions'] || '',
+    licenseEndorsements: r.fields['License Endorsements'] || '',
+    licensePhoto: (r.fields['License Photo'] || [])[0]?.url || '',
     // Abstract
     abstractDate: r.fields['Abstract Date'] || '',
     abstractFile: (r.fields['Abstract File'] || [])[0]?.url || '',
@@ -107,6 +109,7 @@ module.exports = async function handler(req, res) {
       if (fields.licenseExpiry !== undefined) airtableFields['License Expiry'] = fields.licenseExpiry;
       if (fields.licenseProvince !== undefined) airtableFields['License Province'] = fields.licenseProvince;
       if (fields.licenseRestrictions !== undefined) airtableFields['License Restrictions'] = fields.licenseRestrictions;
+      if (fields.licenseEndorsements !== undefined) airtableFields['License Endorsements'] = fields.licenseEndorsements;
       if (fields.abstractDate !== undefined) airtableFields['Abstract Date'] = fields.abstractDate;
       if (fields.manager !== undefined) airtableFields['Manager'] = fields.manager;
       if (fields.depot !== undefined) airtableFields['Depot'] = fields.depot;
