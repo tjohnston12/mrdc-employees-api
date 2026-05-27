@@ -1,9 +1,7 @@
-const { createHash } = require('crypto');
+const bcrypt = require('bcryptjs');
 const PAT = process.env.AIRTABLE_PAT;
 const BASE = process.env.AIRTABLE_BASE;
 const EMPLOYEES_TABLE = process.env.EMPLOYEES_TABLE || 'Employees';
-
-function sha256(s) { return createHash('sha256').update(s).digest('hex'); }
 
 async function at(path) {
   const res = await fetch(`https://api.airtable.com/v0/${BASE}/${path}`, {
@@ -33,8 +31,20 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: 'Your account has been deactivated. Please contact your administrator.' });
     }
 
-    // Check password
-    if (sha256(password) !== (rec.fields['Password Hash'] || '')) {
+    const storedHash = rec.fields['Password Hash'] || '';
+
+    // Support both bcrypt and SHA-256 hashes
+    let passwordValid = false;
+    if (storedHash.startsWith('$2')) {
+      // bcrypt hash
+      passwordValid = await bcrypt.compare(password, storedHash);
+    } else {
+      // SHA-256 hash (legacy)
+      const { createHash } = require('crypto');
+      passwordValid = createHash('sha256').update(password).digest('hex') === storedHash;
+    }
+
+    if (!passwordValid) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
