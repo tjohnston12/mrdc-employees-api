@@ -17,7 +17,9 @@ function mapRecord(r) {
     name: r.fields['Name'] || '',
     jobTitle: r.fields['Job Title'] || '',
     department: r.fields['Department'] || '',
-    phone: r.fields['Phone'] || '',
+    cellPhone: r.fields['Cell Phone'] || '',
+    officePhone: r.fields['Office Phone'] || '',
+    homePhone: r.fields['Home Phone'] || '',
     email: r.fields['Email'] || '',
     photo: (r.fields['Photo'] || [])[0]?.url || '',
     emergencyName: r.fields['Emergency Contact Name'] || '',
@@ -40,6 +42,7 @@ function mapRecord(r) {
     // Manager & depot
     manager: r.fields['Manager'] || '',
     depot: r.fields['Depot'] || '',
+    employmentStatus: r.fields['Employment Status'] || '',
     // Training link
     trainingEmployeeId: r.fields['Training Employee ID'] || ''
   };
@@ -79,7 +82,7 @@ module.exports = async function handler(req, res) {
         method: 'POST',
         body: JSON.stringify({ fields: {
           'Name': name, 'Job Title': jobTitle||'', 'Department': department||'',
-          'Phone': phone||'', 'Email': email||'',
+          'Cell Phone': '', 'Office Phone': '', 'Home Phone': '', 'Email': email||'', 'Employment Status': '',
           'Emergency Contact Name': emergencyName||'', 'Emergency Contact Phone': emergencyPhone||'',
           'Emergency Contact Relation': emergencyRelation||'',
           'Start Date': startDate||'', 'Notes': notes||'', 'Active': true
@@ -96,7 +99,9 @@ module.exports = async function handler(req, res) {
       if (fields.name !== undefined) airtableFields['Name'] = fields.name;
       if (fields.jobTitle !== undefined) airtableFields['Job Title'] = fields.jobTitle;
       if (fields.department !== undefined) airtableFields['Department'] = fields.department;
-      if (fields.phone !== undefined) airtableFields['Phone'] = fields.phone;
+      if (fields.cellPhone !== undefined) airtableFields['Cell Phone'] = fields.cellPhone;
+      if (fields.officePhone !== undefined) airtableFields['Office Phone'] = fields.officePhone;
+      if (fields.homePhone !== undefined) airtableFields['Home Phone'] = fields.homePhone;
       if (fields.email !== undefined) airtableFields['Email'] = fields.email;
       if (fields.emergencyName !== undefined) airtableFields['Emergency Contact Name'] = fields.emergencyName;
       if (fields.emergencyPhone !== undefined) airtableFields['Emergency Contact Phone'] = fields.emergencyPhone;
@@ -113,6 +118,7 @@ module.exports = async function handler(req, res) {
       if (fields.abstractDate !== undefined) airtableFields['Abstract Date'] = fields.abstractDate;
       if (fields.manager !== undefined) airtableFields['Manager'] = fields.manager;
       if (fields.depot !== undefined) airtableFields['Depot'] = fields.depot;
+      if (fields.employmentStatus !== undefined) airtableFields['Employment Status'] = fields.employmentStatus;
       if (fields.trainingEmployeeId !== undefined) airtableFields['Training Employee ID'] = fields.trainingEmployeeId;
       const data = await at(`${table}/${id}`, {
         method: 'PATCH',
