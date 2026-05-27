@@ -9,5 +9,11 @@
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/birthday",
+      "schedule": "0 13 * * *"
+    }
   ]
 }
