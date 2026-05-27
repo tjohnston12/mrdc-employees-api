@@ -37,6 +37,7 @@ function mapRecord(r) {
     licenseRestrictions: r.fields['License Restrictions'] || '',
     licenseEndorsements: r.fields['License Endorsements'] || '',
     licensePhoto: (r.fields['License Photo'] || [])[0]?.url || '',
+    licensePhotos: (r.fields['License Photo'] || []).map(f => ({ url: f.url, filename: f.filename })),
     // Abstract
     abstractDate: r.fields['Abstract Date'] || '',
     abstractFile: (r.fields['Abstract File'] || [])[0]?.url || '',
