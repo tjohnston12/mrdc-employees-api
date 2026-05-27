@@ -16,7 +16,7 @@ function mapRecord(r) {
     id: r.id,
     name: r.fields['Name'] || '',
     jobTitle: r.fields['Job Title'] || '',
-    department: r.fields['Department'] || '',
+    department: Array.isArray(r.fields['Department']) ? r.fields['Department'].join(', ') : (r.fields['Department'] || ''),
     cellPhone: r.fields['Cell Phone'] || '',
     officePhone: r.fields['Office Phone'] || '',
     homePhone: r.fields['Home Phone'] || '',
