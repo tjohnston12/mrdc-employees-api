@@ -105,7 +105,13 @@ module.exports = async function handler(req, res) {
       const airtableFields = {};
       if (fields.name !== undefined) airtableFields['Name'] = fields.name;
       if (fields.jobTitle !== undefined) airtableFields['Job Title'] = fields.jobTitle;
-      if (fields.department !== undefined) airtableFields['Department'] = fields.department;
+      if (fields.department !== undefined) {
+        // Airtable multiple select expects an array
+        const deptVal = fields.department;
+        airtableFields['Department'] = deptVal
+          ? (Array.isArray(deptVal) ? deptVal : deptVal.split(',').map(d => d.trim()).filter(Boolean))
+          : [];
+      }
       if (fields.cellPhone !== undefined) airtableFields['Cell Phone'] = fields.cellPhone;
       if (fields.officePhone !== undefined) airtableFields['Office Phone'] = fields.officePhone;
       if (fields.homePhone !== undefined) airtableFields['Home Phone'] = fields.homePhone;
