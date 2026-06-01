@@ -36,7 +36,7 @@ function mapRecord(r) {
     licenseExpiry: r.fields['License Expiry'] || '',
     licenseProvince: r.fields['License Province'] || '',
     licenseRestrictions: r.fields['License Restrictions'] || '',
-    licenseEndorsements: r.fields['License Endorsements'] || '',
+    licenseEndorsements: r.fields['License Endorsements '] || '',
     licensePhoto: (r.fields['License Photo'] || [])[0]?.url || '',
     licensePhotos: (r.fields['License Photo'] || []).map(f => ({ url: f.url, filename: f.filename })),
     // Abstract
@@ -89,7 +89,7 @@ module.exports = async function handler(req, res) {
         method: 'POST',
         body: JSON.stringify({ fields: {
           'Name': name, 'Job Title': jobTitle||'', 'Department': department||'',
-          'Cell Phone': '', 'Office Phone': '', 'Home Phone': '', 'Email': email||'', 'Employment Status': '',
+          'Cell Phone': '', 'Office Phone': '', 'Home Phone': '', 'Email': email||'', 'Employment Status': null,
           'Emergency Contact Name': emergencyName||'', 'Emergency Contact Phone': emergencyPhone||'',
           'Emergency Contact Relation': emergencyRelation||'',
           'Start Date': startDate||'', 'Notes': notes||'', 'Active': true
@@ -129,11 +129,11 @@ module.exports = async function handler(req, res) {
       if (fields.licenseExpiry !== undefined) airtableFields['License Expiry'] = fields.licenseExpiry || null;
       if (fields.licenseProvince !== undefined) airtableFields['License Province'] = fields.licenseProvince;
       if (fields.licenseRestrictions !== undefined) airtableFields['License Restrictions'] = fields.licenseRestrictions;
-      if (fields.licenseEndorsements !== undefined) airtableFields['License Endorsements'] = fields.licenseEndorsements;
+      if (fields.licenseEndorsements !== undefined) airtableFields['License Endorsements '] = fields.licenseEndorsements;
       if (fields.abstractDate !== undefined) airtableFields['Abstract Date'] = fields.abstractDate || null;
       if (fields.manager !== undefined) airtableFields['Manager'] = fields.manager;
       if (fields.depot !== undefined) airtableFields['Depot'] = fields.depot;
-      if (fields.employmentStatus !== undefined) airtableFields['Employment Status'] = fields.employmentStatus;
+      if (fields.employmentStatus !== undefined) airtableFields['Employment Status'] = fields.employmentStatus || null;
       if (fields.trainingEmployeeId !== undefined) airtableFields['Training Employee ID'] = fields.trainingEmployeeId;
       const data = await at(`${table}/${id}`, {
         method: 'PATCH',
