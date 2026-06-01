@@ -26,6 +26,7 @@ function mapRecord(r) {
     emergencyPhone: r.fields['Emergency Contact Phone'] || '',
     emergencyRelation: r.fields['Emergency Contact Relation'] || '',
     startDate: r.fields['Start Date'] || '',
+    endDate: r.fields['End Date'] || '',
     dob: r.fields['Date of Birth'] || '',
     notes: r.fields['Notes'] || '',
     active: r.fields['Active'] !== false,
@@ -113,9 +114,10 @@ module.exports = async function handler(req, res) {
       if (fields.emergencyPhone !== undefined) airtableFields['Emergency Contact Phone'] = fields.emergencyPhone;
       if (fields.emergencyRelation !== undefined) airtableFields['Emergency Contact Relation'] = fields.emergencyRelation;
       if (fields.startDate !== undefined) airtableFields['Start Date'] = fields.startDate;
+      if (fields.endDate !== undefined) airtableFields['End Date'] = fields.endDate;
       if (fields.dob !== undefined) airtableFields['Date of Birth'] = fields.dob;
       if (fields.notes !== undefined) airtableFields['Notes'] = fields.notes;
-      if (fields.active !== undefined) airtableFields['Active'] = fields.active;
+      if (fields.active !== undefined) airtableFields['Active'] = fields.active === true || fields.active === 'true';
       if (fields.licenseNumber !== undefined) airtableFields['License Number'] = fields.licenseNumber;
       if (fields.licenseClass !== undefined) airtableFields['License Class'] = fields.licenseClass;
       if (fields.licenseExpiry !== undefined) airtableFields['License Expiry'] = fields.licenseExpiry;
