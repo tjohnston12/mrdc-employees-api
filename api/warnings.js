@@ -51,7 +51,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({ fields: {
           'Employee ID': employeeId, 'Employee Name': employeeName||'',
           'Date': date, 'Subject': subject, 'Description': description||'',
-          'Severity': severity||'', 'Issued By': issuedBy||'',
+          'Severity': severity||null, 'Issued By': issuedBy||'','
           'Acknowledged': false, 'Created At': new Date().toISOString()
         }})
       });
@@ -64,7 +64,7 @@ module.exports = async function handler(req, res) {
       if (fields.date !== undefined) af['Date'] = fields.date;
       if (fields.subject !== undefined) af['Subject'] = fields.subject;
       if (fields.description !== undefined) af['Description'] = fields.description;
-      if (fields.severity !== undefined) af['Severity'] = fields.severity;
+      if (fields.severity !== undefined) af['Severity'] = fields.severity || null;
       if (fields.issuedBy !== undefined) af['Issued By'] = fields.issuedBy;
       if (fields.acknowledged !== undefined) af['Acknowledged'] = fields.acknowledged;
       if (fields.acknowledgedDate !== undefined) af['Acknowledged Date'] = fields.acknowledgedDate;

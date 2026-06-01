@@ -63,7 +63,7 @@ module.exports = async function handler(req, res) {
           'Date': date,
           'Type': type,
           'Description': description,
-          'Severity': severity || '',
+          'Severity': severity || null,
           'Location': location || '',
           'Action Taken': actionTaken || '',
           'Follow-up Required': followUpRequired || false,
@@ -82,7 +82,7 @@ module.exports = async function handler(req, res) {
       if (fields.date !== undefined) airtableFields['Date'] = fields.date;
       if (fields.type !== undefined) airtableFields['Type'] = fields.type;
       if (fields.description !== undefined) airtableFields['Description'] = fields.description;
-      if (fields.severity !== undefined) airtableFields['Severity'] = fields.severity;
+      if (fields.severity !== undefined) airtableFields['Severity'] = fields.severity || null;
       if (fields.location !== undefined) airtableFields['Location'] = fields.location;
       if (fields.actionTaken !== undefined) airtableFields['Action Taken'] = fields.actionTaken;
       if (fields.followUpRequired !== undefined) airtableFields['Follow-up Required'] = fields.followUpRequired;
