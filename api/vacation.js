@@ -133,8 +133,8 @@ module.exports = async function handler(req, res) {
       // Admin (all=1, no depot): no filter → see everything
 
       const query = filter
-        ? `${table}?filterByFormula=${filter}&sort[0][field]=Submitted At&sort[0][direction]=desc&pageSize=100`
-        : `${table}?sort[0][field]=Submitted At&sort[0][direction]=desc&pageSize=100`;
+        ? `${table}?filterByFormula=${filter}&sort[0][field]=Submitted%20At&sort[0][direction]=desc&pageSize=100`
+        : `${table}?sort[0][field]=Submitted%20At&sort[0][direction]=desc&pageSize=100`;
 
       const data = await at(query);
       return res.status(200).json({ requests: data.records.map(mapRecord) });
