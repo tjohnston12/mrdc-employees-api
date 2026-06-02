@@ -30,6 +30,8 @@ function mapRecord(r) {
     doctorCertificate: r.fields['Doctor Certificate'] || '',
     details:          r.fields['Details']           || '',
     status:           r.fields['Status']            || 'Pending',
+    filedBy:          r.fields['Filed By']           || '',
+    filedDate:        r.fields['Filed Date']         || '',
     // Stage 1 — Manager
     managerApprovedBy:    r.fields['Manager Approved By']   || '',
     managerApprovedDate:  r.fields['Manager Approved Date'] || '',
@@ -236,20 +238,11 @@ module.exports = async function handler(req, res) {
         af['Manager Notes']        = fields.managerNotes        || '';
       }
 
-      // Stage 2: Admin final approval
-      if (action === 'admin-approve') {
-        af['Status']             = 'Approved';
-        af['Admin Approved By']  = fields.adminApprovedBy  || '';
-        af['Admin Approved Date']= fields.adminApprovedDate || new Date().toISOString().split('T')[0];
-        af['Admin Notes']        = fields.adminNotes        || '';
-      }
-
-      // Stage 2: Admin deny
-      if (action === 'admin-deny') {
-        af['Status']             = 'Denied';
-        af['Admin Approved By']  = fields.adminApprovedBy  || '';
-        af['Admin Approved Date']= fields.adminApprovedDate || new Date().toISOString().split('T')[0];
-        af['Admin Notes']        = fields.adminNotes        || '';
+      // Stage 2: Terri Lee files the request
+      if (action === 'file') {
+        af['Status']      = 'Filed';
+        af['Filed By']    = fields.filedBy    || '';
+        af['Filed Date']  = fields.filedDate  || new Date().toISOString().split('T')[0];
       }
 
       // Generic status update (fallback)
@@ -265,10 +258,10 @@ module.exports = async function handler(req, res) {
       const summary = leaveRowsSummary(record.leaveRows);
 
       if (action === 'manager-approve') {
-        // Notify admins to give final sign-off
-        const adminEmails = await getEmployeeEmails({ role: 'Admin' });
-        if (adminEmails.length) {
-          const html = emailTemplate('Leave Request — Manager Approved, Awaiting Your Sign-off', {
+        // Notify Terri Lee to file the request
+        const terriEmail = await getTerriLeeEmail();
+        if (terriEmail.length) {
+          const html = emailTemplate('Leave Request — Approved by Manager, Please File', {
             'Employee':            record.employeeName     || '—',
             'Depot':               record.employeeDepot    || '—',
             'Date of Request':     record.dateOfRequest,
@@ -276,9 +269,9 @@ module.exports = async function handler(req, res) {
             'Leave Type(s)':       summary,
             'Manager Approved By': record.managerApprovedBy,
             'Manager Notes':       record.managerNotes     || '—',
-            'Status':              'Manager Approved — awaiting admin sign-off'
-          }, 'Please log in to the MRDC Employee Directory to give final approval or denial.');
-          await sendEmail(adminEmails, `Leave Request — ${record.employeeName} — Manager Approved`, html);
+            'Status':              'Manager Approved — please log in to acknowledge and file'
+          }, 'Please log in to the MRDC Employee Directory to acknowledge and file this leave request.');
+          await sendEmail(terriEmail, `Leave Request — ${record.employeeName} — Ready to File`, html);
         }
       }
 
@@ -298,20 +291,19 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      if (action === 'admin-approve' || action === 'admin-deny') {
-        // Notify manager of final outcome
+      if (action === 'file') {
+        // Notify manager that the request has been filed
         if (record.employeeManager) {
           const managerEmails = await getEmployeeEmails({ managerName: record.employeeManager });
           if (managerEmails.length) {
-            const approved = action === 'admin-approve';
-            const html = emailTemplate(`Leave Request — ${approved ? 'Approved' : 'Denied'} by Administration`, {
-              'Employee':        record.employeeName     || '—',
+            const html = emailTemplate('Leave Request — Filed by Administration', {
+              'Employee':        record.employeeName  || '—',
               'Date of Request': record.dateOfRequest,
               'Leave Type(s)':   summary,
-              'Final Decision':  approved ? 'Approved' : 'Denied',
-              'Admin Notes':     record.adminNotes       || '—'
+              'Filed By':        record.filedBy       || '—',
+              'Status':          'Filed'
             }, 'Automated notification from the MRDC Employee Directory.');
-            await sendEmail(managerEmails, `Leave Request — ${record.employeeName} — ${approved ? 'Approved' : 'Denied'} by Admin`, html);
+            await sendEmail(managerEmails, `Leave Request — ${record.employeeName} — Filed`, html);
           }
         }
       }
