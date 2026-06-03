@@ -23,7 +23,7 @@ function mapRecord(r) {
     employeeId:       r.fields['Employee ID']       || '',
     employeeName:     r.fields['Employee Name']     || '',
     employeeDepot:    r.fields['Employee Depot']    || '',
-    employeeManager:  r.fields['Employee Manager'] || r.fields['Manager'] || '',
+    employeeManager:  r.fields['Employee Manager'] || '',
     dateOfRequest:    r.fields['Date of Request']   || '',
     location:         r.fields['Location']          || '',
     leaveRows: (() => { try { return JSON.parse(r.fields['Leave Rows'] || '[]'); } catch { return []; } })(),
