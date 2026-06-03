@@ -187,7 +187,7 @@ module.exports = async function handler(req, res) {
             ...(doctorCertificate ? { "Doctor's Certificate": doctorCertificate } : {}),
             ...(details            ? { 'Details': details }                          : {}),
             'Status':          'Pending — awaiting your approval'
-          }, 'Please log in to the MRDC Employee Directory to review and approve this request before it goes to administration.');
+          }, 'Please log in to review this request: <a href="https://mrdc-htra.com/employees" style="color:#1E2B5E;font-weight:600">mrdc-htra.com/employees</a>');
           await sendEmail(managerEmails, `Leave Request — ${employeeName} — Awaiting Your Approval`, html);
         }
       } else {
@@ -201,7 +201,7 @@ module.exports = async function handler(req, res) {
             'Location':        location      || '—',
             'Leave Type(s)':   leaveRowsSummary(leaveRows),
             'Status':          'Pending — no manager assigned, sent directly to admin'
-          }, 'Automated notification from the MRDC Employee Directory.');
+          }, 'Automated notification from the MRDC Employee Directory. <a href="https://mrdc-htra.com/employees" style="color:#1E2B5E;font-weight:600">Open the app &rarr;</a>');
           await sendEmail(adminEmails, `Leave Request — ${employeeName} — No Manager Assigned`, html);
         }
       }
@@ -270,7 +270,7 @@ module.exports = async function handler(req, res) {
             'Manager Approved By': record.managerApprovedBy,
             'Manager Notes':       record.managerNotes     || '—',
             'Status':              'Manager Approved — please log in to acknowledge and file'
-          }, 'Please log in to the MRDC Employee Directory to acknowledge and file this leave request.');
+          }, 'Please log in to the MRDC Employee Directory to acknowledge and file this leave request. <a href="https://mrdc-htra.com/employees" style="color:#1E2B5E;font-weight:600">Open the app &rarr;</a>');
           await sendEmail(terriEmail, `Leave Request — ${record.employeeName} — Ready to File`, html);
         }
       }
@@ -286,7 +286,7 @@ module.exports = async function handler(req, res) {
             'Manager':         record.managerApprovedBy,
             'Manager Notes':   record.managerNotes  || '—',
             'Status':          'Denied'
-          }, 'Automated notification from the MRDC Employee Directory.');
+          }, 'Automated notification from the MRDC Employee Directory. <a href="https://mrdc-htra.com/employees" style="color:#1E2B5E;font-weight:600">Open the app &rarr;</a>');
           await sendEmail(adminEmails, `Leave Request — ${record.employeeName} — Denied by Manager`, html);
         }
       }
@@ -302,7 +302,7 @@ module.exports = async function handler(req, res) {
               'Leave Type(s)':   summary,
               'Filed By':        record.filedBy       || '—',
               'Status':          'Filed'
-            }, 'Automated notification from the MRDC Employee Directory.');
+            }, 'Automated notification from the MRDC Employee Directory. <a href="https://mrdc-htra.com/employees" style="color:#1E2B5E;font-weight:600">Open the app &rarr;</a>');
             await sendEmail(managerEmails, `Leave Request — ${record.employeeName} — Filed`, html);
           }
         }
