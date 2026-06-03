@@ -25,11 +25,13 @@ module.exports = async function handler(req, res) {
     const filter = encodeURIComponent(`{Username}='${username}'`);
     const data = await at(`${encodeURIComponent(EMPLOYEES_TABLE)}?filterByFormula=${filter}&maxRecords=1`);
 
-    if (!data.records?.length) return res.status(401).json({ error: 'Invalid username or password' });
+    console.log('[login debug] records found:', data.records?.length, 'for username:', username);
+    if (!data.records?.length) return res.status(401).json({ error: 'Invalid username or password', debug: 'no_record' });
 
     const rec = data.records[0];
 
     // Check active
+    console.log('[login debug] Active field:', rec.fields['Active'], typeof rec.fields['Active']);
     if (rec.fields['Active'] === false) {
       return res.status(401).json({ error: 'Your account has been deactivated. Please contact your administrator.' });
     }
@@ -52,8 +54,9 @@ module.exports = async function handler(req, res) {
       passwordValid = createHash('sha256').update(password).digest('hex') === storedHash;
     }
 
+    console.log('[login debug] passwordValid:', passwordValid, 'hash prefix:', storedHash.slice(0,7));
     if (!passwordValid) {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: 'Invalid username or password', debug: 'bad_password' });
     }
 
     const name = rec.fields['Name'] || username;
