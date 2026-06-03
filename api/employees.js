@@ -15,7 +15,7 @@ function mapRecord(r) {
   return {
     id: r.id,
     name: r.fields['Name'] || '',
-    jobTitle: r.fields['Job Title'] || '',
+    jobTitle: Array.isArray(r.fields['Job Title']) ? r.fields['Job Title'].join(', ') : (r.fields['Job Title'] || ''),
     department: Array.isArray(r.fields['Department']) ? r.fields['Department'].join(', ') : (r.fields['Department'] || ''),
     cellPhone: r.fields['Cell Phone'] || '',
     officePhone: r.fields['Office Phone'] || '',
@@ -104,7 +104,12 @@ module.exports = async function handler(req, res) {
       if (!id) return res.status(400).json({ error: 'ID required' });
       const airtableFields = {};
       if (fields.name !== undefined) airtableFields['Name'] = fields.name;
-      if (fields.jobTitle !== undefined) airtableFields['Job Title'] = fields.jobTitle;
+      if (fields.jobTitle !== undefined) {
+        const jt = fields.jobTitle;
+        airtableFields['Job Title'] = jt
+          ? (Array.isArray(jt) ? jt : jt.split(',').map(t => t.trim()).filter(Boolean))
+          : [];
+      }
       if (fields.department !== undefined) {
         // Airtable multiple select expects an array
         const deptVal = fields.department;
