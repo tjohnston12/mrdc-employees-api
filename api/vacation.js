@@ -175,7 +175,7 @@ module.exports = async function handler(req, res) {
             'Employee Name':    employeeName    || '',
             'Employee Depot':   employeeDepot   || '',
             'Employee Manager': employeeManager || '',
-            ...(employeeManagerId ? { 'Employee Manager Link': [{ 'id': employeeManagerId }] } : {}),
+            ...(employeeManagerId ? { 'Employee Manager Link': [employeeManagerId] } : {}),
             'Date of Request':  dateOfRequest,
             'Location':         location        || '',
             'Leave Rows':       JSON.stringify(leaveRows),
