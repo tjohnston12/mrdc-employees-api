@@ -159,6 +159,10 @@ module.exports = async function handler(req, res) {
       if (fields.depot !== undefined) airtableFields['Depot'] = fields.depot;
       if (fields.employmentStatus !== undefined) airtableFields['Employment Status'] = fields.employmentStatus || null;
       if (fields.trainingEmployeeId !== undefined) airtableFields['Training Employee ID'] = fields.trainingEmployeeId;
+      if (fields.photoUrl !== undefined && fields.photoUrl) {
+        // Airtable accepts {url, filename} objects for attachment fields
+        airtableFields['Photo'] = [{ url: fields.photoUrl, filename: fields.photoFileName || 'photo.jpg' }];
+      }
       const data = await at(`${table}/${id}`, {
         method: 'PATCH',
         body: JSON.stringify({ fields: airtableFields })
