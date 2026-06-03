@@ -125,6 +125,7 @@ async function getTerriLeeEmail() {
 // ── Main handler ───────────────────────────────────────────────
 
 module.exports = async function handler(req, res) {
+  console.log('[vacation.js] build=linkfix-2 (Employee Manager Link sent as [id] array)');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-user-role, x-user-id, x-user-name');
@@ -163,6 +164,7 @@ module.exports = async function handler(req, res) {
         dateOfRequest, location, leaveRows, doctorCertificate, details
       } = req.body || {};
 
+      console.log('[vacation.js] POST body fields:', JSON.stringify({employeeId,employeeName,employeeDepot,employeeManager,employeeManagerId,location}));
       if (!employeeId || !dateOfRequest || !leaveRows?.length) {
         return res.status(400).json({ error: 'Employee, date, and at least one leave type are required' });
       }
