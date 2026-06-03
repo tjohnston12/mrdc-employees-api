@@ -23,7 +23,7 @@ function mapRecord(r) {
     employeeId:       r.fields['Employee ID']       || '',
     employeeName:     r.fields['Employee Name']     || '',
     employeeDepot:    r.fields['Employee Depot']    || '',
-    employeeManager:  r.fields['Employee Manager'] || '',
+    employeeManager:  r.fields['Employee Manager Name'] || r.fields['Employee Manager'] || '',
     dateOfRequest:    r.fields['Date of Request']   || '',
     location:         r.fields['Location']          || '',
     leaveRows: (() => { try { return JSON.parse(r.fields['Leave Rows'] || '[]'); } catch { return []; } })(),
@@ -159,7 +159,7 @@ module.exports = async function handler(req, res) {
     // ── POST — new submission ──────────────────────────────────
     if (req.method === 'POST') {
       const {
-        employeeId, employeeName, employeeDepot, employeeManager,
+        employeeId, employeeName, employeeDepot, employeeManager, employeeManagerId,
         dateOfRequest, location, leaveRows, doctorCertificate, details
       } = req.body || {};
 
@@ -175,6 +175,7 @@ module.exports = async function handler(req, res) {
             'Employee Name':    employeeName    || '',
             'Employee Depot':   employeeDepot   || '',
             'Employee Manager': employeeManager || '',
+            ...(employeeManagerId ? { 'Employee Manager Link': [{ 'id': employeeManagerId }] } : {}),
             'Date of Request':  dateOfRequest,
             'Location':         location        || '',
             'Leave Rows':       JSON.stringify(leaveRows),

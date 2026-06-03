@@ -44,7 +44,8 @@ function mapRecord(r) {
     abstractFile: (r.fields['Abstract File'] || [])[0]?.url || '',
     abstractFiles: (r.fields['Abstract File'] || []).map(f => ({ url: f.url, filename: f.filename })),
     // Manager & depot
-    manager: r.fields['Manager'] || '',
+    manager: Array.isArray(r.fields['Manager']) ? (r.fields['Manager'][0]?.name || '') : (r.fields['Manager'] || ''),
+    managerId: Array.isArray(r.fields['Manager']) ? (r.fields['Manager'][0]?.id || '') : '',
     depot: r.fields['Depot'] || '',
     employmentStatus: r.fields['Employment Status'] || '',
     // Training link
