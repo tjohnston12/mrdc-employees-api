@@ -60,6 +60,25 @@ module.exports = async function handler(req, res) {
   const table = encodeURIComponent(EMPLOYEES_TABLE);
 
   try {
+    // GET field metadata (for dropdowns)
+    if (req.method === 'GET' && req.query.meta === 'fields') {
+      const tableName = EMPLOYEES_TABLE;
+      const metaRes = await fetch(`https://api.airtable.com/v0/meta/bases/${BASE}/tables`, {
+        headers: { Authorization: `Bearer ${PAT}` }
+      });
+      if (!metaRes.ok) return res.status(500).json({ error: 'Could not fetch metadata' });
+      const metaData = await metaRes.json();
+      const table = metaData.tables?.find(t => t.name === tableName);
+      if (!table) return res.status(404).json({ error: 'Table not found' });
+      const fields = {};
+      (table.fields || []).forEach(f => {
+        if (f.options?.choices) {
+          fields[f.name] = f.options.choices.map(c => c.name);
+        }
+      });
+      return res.status(200).json({ fields });
+    }
+
     // GET all or single
     if (req.method === 'GET') {
       const { id, search, department } = req.query;
