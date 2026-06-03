@@ -48,7 +48,9 @@ function mapRecord(r) {
     depot: r.fields['Depot'] || '',
     employmentStatus: r.fields['Employment Status'] || '',
     // Training link
-    trainingEmployeeId: r.fields['Training Employee ID'] || ''
+    trainingEmployeeId: r.fields['Training Employee ID'] || '',
+    // Role — used for manager dropdown filtering
+    role: r.fields['Role'] || ''
   };
 }
 
