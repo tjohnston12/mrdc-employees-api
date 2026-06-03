@@ -34,7 +34,12 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: 'Your account has been deactivated. Please contact your administrator.' });
     }
 
-    const storedHash = rec.fields['Password Hash'] || '';
+    let storedHash = rec.fields['Password Hash'] || '';
+
+    // Normalize $2a$ to $2b$ — bcryptjs handles $2b$ more reliably
+    if (storedHash.startsWith('$2a$')) {
+      storedHash = '$2b$' + storedHash.slice(4);
+    }
 
     // Support both bcrypt and SHA-256 hashes
     let passwordValid = false;
