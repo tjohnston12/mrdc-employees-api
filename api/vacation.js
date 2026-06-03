@@ -13,7 +13,7 @@ async function at(path, options = {}) {
       ...(options.headers || {})
     }
   });
-  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'Airtable error'); }
+  if (!res.ok) { const e = await res.json(); console.error('[Airtable error]', JSON.stringify(e)); throw new Error(e.error?.message || JSON.stringify(e) || 'Airtable error'); }
   return res.json();
 }
 
