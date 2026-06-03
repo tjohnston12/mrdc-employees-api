@@ -108,6 +108,20 @@ function leaveRowsSummary(leaveRows) {
     ).join('<br>') || '—';
 }
 
+async function getTerriLeeEmail() {
+  try {
+    const filter = encodeURIComponent(`{Name}='Terri Lee'`);
+    const table = encodeURIComponent(EMPLOYEES_TABLE);
+    const res = await fetch(`https://api.airtable.com/v0/${BASE}/${table}?filterByFormula=${filter}&maxRecords=1`, {
+      headers: { Authorization: `Bearer ${PAT}` }
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const email = data.records?.[0]?.fields?.['Email'];
+    return email ? [email] : [];
+  } catch { return []; }
+}
+
 // ── Main handler ───────────────────────────────────────────────
 
 module.exports = async function handler(req, res) {
