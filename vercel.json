@@ -17,3 +17,11 @@
     }
   ]
 }
+{
+  "crons": [
+    {
+      "path": "/api/payroll-digest",
+      "schedule": "0 12 * * 5"
+    }
+  ]
+}
