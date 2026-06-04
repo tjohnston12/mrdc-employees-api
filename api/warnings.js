@@ -44,6 +44,20 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-user-role, x-user-id, x-user-name');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // ── DEBUG: reveal which build is live + config (raw-URL based) ──
+  if ((req.url || '').indexOf('debug=1') !== -1) {
+    return res.status(200).json({
+      version: 'v6-debug',
+      baseInUse: BASE || '(none)',
+      tableInUse: WARNINGS_TABLE,
+      warningsBaseSet: !!process.env.WARNINGS_BASE,
+      airtableBaseSet: !!process.env.AIRTABLE_BASE,
+      warningsTableSet: !!process.env.WARNINGS_TABLE,
+      patPresent: !!PAT,
+      patLength: PAT ? PAT.length : 0
+    });
+  }
+
   const table = encodeURIComponent(WARNINGS_TABLE);
 
   try {
