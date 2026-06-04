@@ -23,7 +23,9 @@ function mapRecord(r) {
     issuedBy: r.fields['Issued By'] || '',
     acknowledged: r.fields['Acknowledged'] || false,
     acknowledgedDate: r.fields['Acknowledged Date'] || '',
-    createdAt: r.fields['Created At'] || ''
+    createdAt: r.fields['Created At'] || '',
+    fileUrl: (r.fields['File'] && r.fields['File'][0]) ? r.fields['File'][0].url : '',
+    fileName: (r.fields['File'] && r.fields['File'][0]) ? r.fields['File'][0].filename : ''
   };
 }
 
@@ -51,8 +53,9 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({ fields: {
           'Employee ID': employeeId, 'Employee Name': employeeName||'',
           'Date': date, 'Subject': subject, 'Description': description||'',
-          'Severity': severity||null, 'Issued By': issuedBy||'','
-          'Acknowledged': false, 'Created At': new Date().toISOString()
+          'Severity': severity||null, 'Issued By': issuedBy||'',
+          'Acknowledged': false, 'Created At': new Date().toISOString(),
+          ...(req.body.fileUrl ? { 'File': [{ url: req.body.fileUrl, filename: req.body.fileName||'document' }] } : {})
         }})
       });
       return res.status(200).json(mapRecord(data));
@@ -68,6 +71,7 @@ module.exports = async function handler(req, res) {
       if (fields.issuedBy !== undefined) af['Issued By'] = fields.issuedBy;
       if (fields.acknowledged !== undefined) af['Acknowledged'] = fields.acknowledged;
       if (fields.acknowledgedDate !== undefined) af['Acknowledged Date'] = fields.acknowledgedDate;
+      if (fields.fileUrl) af['File'] = [{ url: fields.fileUrl, filename: fields.fileName||'document' }];
       const data = await at(`${table}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: af }) });
       return res.status(200).json(mapRecord(data));
     }
