@@ -1,5 +1,5 @@
 const PAT = process.env.AIRTABLE_PAT;
-const BASE = process.env.AIRTABLE_BASE;
+const BASE = process.env.WARNINGS_BASE || process.env.AIRTABLE_BASE;
 const WARNINGS_TABLE = process.env.WARNINGS_TABLE || 'Warning Letters';
 
 async function at(path, options = {}) {
