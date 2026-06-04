@@ -98,6 +98,18 @@ async function getEmployeeEmails({ role, depot, managerName }) {
   } catch { return []; }
 }
 
+// Find an employee's record id by their Name (for linked-record fields)
+async function findEmployeeIdByName(name) {
+  if (!name) return '';
+  try {
+    const safe = String(name).replace(/"/g, '\\"');
+    const filter = encodeURIComponent(`{Name}="${safe}"`);
+    const table = encodeURIComponent(EMPLOYEES_TABLE);
+    const data = await at(`${table}?filterByFormula=${filter}&maxRecords=1`);
+    return (data.records && data.records[0] && data.records[0].id) || '';
+  } catch { return ''; }
+}
+
 function leaveRowsSummary(leaveRows) {
   return (leaveRows || [])
     .filter(r => r.days || r.startDate)
@@ -125,7 +137,7 @@ async function getTerriLeeEmail() {
 // ── Main handler ───────────────────────────────────────────────
 
 module.exports = async function handler(req, res) {
-  console.log('[vacation.js] build=linkfix-2 (Employee Manager Link sent as [id] array)');
+  console.log('[vacation.js] build=linkfix-3 (Employee Manager link via record id)');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-user-role, x-user-id, x-user-name');
@@ -164,9 +176,15 @@ module.exports = async function handler(req, res) {
         dateOfRequest, location, leaveRows, doctorCertificate, details
       } = req.body || {};
 
-      console.log('[vacation.js] POST body fields:', JSON.stringify({employeeId,employeeName,employeeDepot,employeeManager,employeeManagerId,location}));
       if (!employeeId || !dateOfRequest || !leaveRows?.length) {
         return res.status(400).json({ error: 'Employee, date, and at least one leave type are required' });
+      }
+
+      // 'Employee Manager' is a linked-record field: it needs an array of Employees record ids.
+      // Prefer the id from the client; if missing, resolve it from the manager's name.
+      let managerLinkId = employeeManagerId || '';
+      if (!managerLinkId && employeeManager) {
+        managerLinkId = await findEmployeeIdByName(employeeManager);
       }
 
       const data = await at(table, {
@@ -176,8 +194,7 @@ module.exports = async function handler(req, res) {
             'Employee ID':      employeeId,
             'Employee Name':    employeeName    || '',
             'Employee Depot':   employeeDepot   || '',
-            'Employee Manager': employeeManager || '',
-            ...(employeeManagerId ? { 'Employee Manager Link': [employeeManagerId] } : {}),
+            ...(managerLinkId ? { 'Employee Manager': [managerLinkId] } : {}),
             'Date of Request':  dateOfRequest,
             'Location':         location        || '',
             'Leave Rows':       JSON.stringify(leaveRows),
