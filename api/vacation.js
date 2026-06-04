@@ -121,6 +121,28 @@ async function getEmployeesByJobTitle(title) {
   } catch { return []; }
 }
 
+// Resolve a single employee's email, trying their record id first, then their name
+async function getEmployeeContactEmail(employeeId, employeeName) {
+  const table = encodeURIComponent(EMPLOYEES_TABLE);
+  if (employeeId && /^rec/.test(employeeId)) {
+    try {
+      const data = await at(`${table}/${employeeId}`);
+      const email = data.fields && data.fields['Email'];
+      if (email) return [email];
+    } catch { /* fall through to name lookup */ }
+  }
+  if (employeeName) {
+    try {
+      const safe = String(employeeName).replace(/"/g, '\\"');
+      const filter = encodeURIComponent(`{Name}="${safe}"`);
+      const data = await at(`${table}?filterByFormula=${filter}&maxRecords=1`);
+      const email = data.records && data.records[0] && data.records[0].fields['Email'];
+      if (email) return [email];
+    } catch { /* ignore */ }
+  }
+  return [];
+}
+
 function leaveRowsSummary(leaveRows) {
   return (leaveRows || [])
     .filter(r => r.days || r.startDate)
@@ -148,7 +170,7 @@ async function getTerriLeeEmail() {
 // ── Main handler ───────────────────────────────────────────────
 
 module.exports = async function handler(req, res) {
-  console.log('[vacation.js] build=payroll-1 (manager link + payroll emails)');
+  console.log('[vacation.js] build=payroll-2 (employee status emails + delete restricted to Troy)');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-user-role, x-user-id, x-user-name');
@@ -335,6 +357,20 @@ module.exports = async function handler(req, res) {
           }, 'Automated payroll notification from the MRDC Employee Directory. <a href="https://mrdc-htra.com/employees" style="color:#1E2B5E;font-weight:600">Open the app &rarr;</a>');
           await sendEmail(adminAsstEmails, `Approved Leave — ${record.employeeName} — For Payroll`, apHtml);
         }
+
+        // Notify the employee that their request was approved by their manager
+        const empApproveEmail = await getEmployeeContactEmail(record.employeeId, record.employeeName);
+        if (empApproveEmail.length) {
+          const eaHtml = emailTemplate('Your Leave Request — Approved by Your Manager', {
+            'Date of Request': record.dateOfRequest,
+            'Location':        record.location      || '—',
+            'Leave Type(s)':   summary,
+            'Approved By':     record.managerApprovedBy || '—',
+            'Manager Notes':   record.managerNotes  || '—',
+            'Status':          'Approved by your manager'
+          }, 'Your leave request has been approved by your manager and forwarded to administration for filing. <a href="https://mrdc-htra.com/employees" style="color:#1E2B5E;font-weight:600">Open the app &rarr;</a>');
+          await sendEmail(empApproveEmail, 'Your Leave Request — Approved', eaHtml);
+        }
       }
 
       if (action === 'manager-deny') {
@@ -350,6 +386,19 @@ module.exports = async function handler(req, res) {
             'Status':          'Denied'
           }, 'Automated notification from the MRDC Employee Directory. <a href="https://mrdc-htra.com/employees" style="color:#1E2B5E;font-weight:600">Open the app &rarr;</a>');
           await sendEmail(adminEmails, `Leave Request — ${record.employeeName} — Denied by Manager`, html);
+        }
+
+        // Notify the employee that their request was not approved
+        const empDenyEmail = await getEmployeeContactEmail(record.employeeId, record.employeeName);
+        if (empDenyEmail.length) {
+          const edHtml = emailTemplate('Your Leave Request — Not Approved', {
+            'Date of Request': record.dateOfRequest,
+            'Leave Type(s)':   summary,
+            'Reviewed By':     record.managerApprovedBy || '—',
+            'Manager Notes':   record.managerNotes  || '—',
+            'Status':          'Not approved'
+          }, 'Your leave request was not approved by your manager. Please speak with your manager if you have questions. <a href="https://mrdc-htra.com/employees" style="color:#1E2B5E;font-weight:600">Open the app &rarr;</a>');
+          await sendEmail(empDenyEmail, 'Your Leave Request — Update', edHtml);
         }
       }
 
@@ -375,6 +424,10 @@ module.exports = async function handler(req, res) {
 
     // ── DELETE ─────────────────────────────────────────────────
     if (req.method === 'DELETE') {
+      const requester = req.headers['x-user-name'] || '';
+      if (requester !== 'Troy Johnston') {
+        return res.status(403).json({ error: 'Only Troy Johnston can delete leave requests' });
+      }
       const { id } = req.body || {};
       if (!id) return res.status(400).json({ error: 'ID required' });
       await at(`${table}/${id}`, { method: 'DELETE' });
