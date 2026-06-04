@@ -110,6 +110,17 @@ async function findEmployeeIdByName(name) {
   } catch { return ''; }
 }
 
+// Find emails of active employees holding a given job title (Job Title may be multi-value)
+async function getEmployeesByJobTitle(title) {
+  if (!title) return [];
+  try {
+    const filter = encodeURIComponent(`AND(FIND('${title}',{Job Title}),{Active}=TRUE())`);
+    const table = encodeURIComponent(EMPLOYEES_TABLE);
+    const data = await at(`${table}?filterByFormula=${filter}&pageSize=50`);
+    return data.records.filter(r => r.fields['Email']).map(r => r.fields['Email']);
+  } catch { return []; }
+}
+
 function leaveRowsSummary(leaveRows) {
   return (leaveRows || [])
     .filter(r => r.days || r.startDate)
@@ -137,7 +148,7 @@ async function getTerriLeeEmail() {
 // ── Main handler ───────────────────────────────────────────────
 
 module.exports = async function handler(req, res) {
-  console.log('[vacation.js] build=linkfix-3 (Employee Manager link via record id)');
+  console.log('[vacation.js] build=payroll-1 (manager link + payroll emails)');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-user-role, x-user-id, x-user-name');
@@ -306,6 +317,23 @@ module.exports = async function handler(req, res) {
             'Status':              'Manager Approved — please log in to acknowledge and file'
           }, 'Please log in to the MRDC Employee Directory to acknowledge and file this leave request. <a href="https://mrdc-htra.com/employees" style="color:#1E2B5E;font-weight:600">Open the app &rarr;</a>');
           await sendEmail(terriEmail, `Leave Request — ${record.employeeName} — Ready to File`, html);
+        }
+
+        // Notify the Administration Assistant with the details, for payroll
+        const adminAsstEmails = await getEmployeesByJobTitle('Administration Assistant');
+        if (adminAsstEmails.length) {
+          const apHtml = emailTemplate('Leave Request Approved — For Payroll', {
+            'Employee':        record.employeeName      || '—',
+            'Depot':           record.employeeDepot     || '—',
+            'Manager':         record.employeeManager   || '—',
+            'Date of Request': record.dateOfRequest,
+            'Location':        record.location          || '—',
+            'Leave Type(s)':   summary,
+            'Approved By':     record.managerApprovedBy || '—',
+            'Approved Date':   record.managerApprovedDate || '—',
+            'Status':          'Manager Approved'
+          }, 'Automated payroll notification from the MRDC Employee Directory. <a href="https://mrdc-htra.com/employees" style="color:#1E2B5E;font-weight:600">Open the app &rarr;</a>');
+          await sendEmail(adminAsstEmails, `Approved Leave — ${record.employeeName} — For Payroll`, apHtml);
         }
       }
 
