@@ -3,29 +3,38 @@ const BASE = process.env.AIRTABLE_BASE;
 const WARNINGS_TABLE = process.env.WARNINGS_TABLE || 'Warning Letters';
 
 async function at(path, options = {}) {
-  const res = await fetch(`https://api.airtable.com/v0/${BASE}/${path}`, {
-    ...options,
-    headers: { Authorization: `Bearer ${PAT}`, 'Content-Type': 'application/json', ...(options.headers||{}) }
-  });
-  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'Airtable error'); }
-  return res.json();
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(`https://api.airtable.com/v0/${BASE}/${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${PAT}`, 'Content-Type': 'application/json', ...(options.headers || {}) }
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error?.message || `Airtable error ${res.status}`);
+    return body;
+  } finally {
+    clearTimeout(tid);
+  }
 }
 
 function mapRecord(r) {
+  const fields = r.fields || {};
   return {
     id: r.id,
-    employeeId: r.fields['Employee ID'] || '',
-    employeeName: r.fields['Employee Name'] || '',
-    date: r.fields['Date'] || '',
-    subject: r.fields['Subject'] || '',
-    description: r.fields['Description'] || '',
-    severity: r.fields['Severity'] || '',
-    issuedBy: r.fields['Issued By'] || '',
-    acknowledged: r.fields['Acknowledged'] || false,
-    acknowledgedDate: r.fields['Acknowledged Date'] || '',
-    createdAt: r.fields['Created At'] || '',
-    fileUrl: (r.fields['File'] && r.fields['File'][0]) ? r.fields['File'][0].url : '',
-    fileName: (r.fields['File'] && r.fields['File'][0]) ? r.fields['File'][0].filename : ''
+    employeeId:       fields['Employee ID']       || '',
+    employeeName:     fields['Employee Name']      || '',
+    date:             fields['Date']               || '',
+    subject:          fields['Subject']            || '',
+    description:      fields['Description']        || '',
+    severity:         fields['Severity']           || '',
+    issuedBy:         fields['Issued By']          || '',
+    acknowledged:     fields['Acknowledged']       || false,
+    acknowledgedDate: fields['Acknowledged Date']  || '',
+    createdAt:        fields['Created At']         || '',
+    fileUrl:  (fields['File'] && fields['File'][0]) ? fields['File'][0].url      : '',
+    fileName: (fields['File'] && fields['File'][0]) ? fields['File'][0].filename : ''
   };
 }
 
@@ -34,53 +43,77 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-user-role, x-user-id, x-user-name');
   if (req.method === 'OPTIONS') return res.status(200).end();
+
   const table = encodeURIComponent(WARNINGS_TABLE);
+
   try {
+    // ── GET ──────────────────────────────────────────────────────
     if (req.method === 'GET') {
-      const { employeeId, all } = req.query;
-      const filter = employeeId && !all ? encodeURIComponent(`{Employee ID}='${employeeId}'`) : '';
+      const employeeId = (req.query || {}).employeeId;
+      const all        = (req.query || {}).all;
+      const filter = (employeeId && !all)
+        ? encodeURIComponent(`{Employee ID}='${employeeId}'`)
+        : '';
       const query = filter
-        ? `${table}?filterByFormula=${filter}&sort[0][field]=Date&sort[0][direction]=desc&pageSize=100`
-        : `${table}?sort[0][field]=Date&sort[0][direction]=desc&pageSize=100`;
+        ? `${table}?filterByFormula=${filter}&sort%5B0%5D%5Bfield%5D=Date&sort%5B0%5D%5Bdirection%5D=desc&pageSize=100`
+        : `${table}?sort%5B0%5D%5Bfield%5D=Date&sort%5B0%5D%5Bdirection%5D=desc&pageSize=100`;
       const data = await at(query);
-      return res.status(200).json({ warnings: data.records.map(mapRecord) });
+      const records = (data.records || []).map(mapRecord);
+      return res.status(200).json({ warnings: records });
     }
+
+    // ── POST ─────────────────────────────────────────────────────
     if (req.method === 'POST') {
-      const { employeeId, employeeName, date, subject, description, severity, issuedBy } = req.body || {};
-      if (!employeeId || !date || !subject) return res.status(400).json({ error: 'Employee, date and subject are required' });
-      const data = await at(table, {
-        method: 'POST',
-        body: JSON.stringify({ fields: {
-          'Employee ID': employeeId, 'Employee Name': employeeName||'',
-          'Date': date, 'Subject': subject, 'Description': description||'',
-          'Severity': severity||null, 'Issued By': issuedBy||'',
-          'Acknowledged': false, 'Created At': new Date().toISOString(),
-          ...(req.body.fileUrl ? { 'File': [{ url: req.body.fileUrl, filename: req.body.fileName||'document' }] } : {})
-        }})
-      });
+      const body = req.body || {};
+      const { employeeId, employeeName, date, subject, description, severity, issuedBy, fileUrl, fileName } = body;
+      if (!employeeId || !date || !subject)
+        return res.status(400).json({ error: 'Employee, date and subject are required' });
+      const fields = {
+        'Employee ID':   employeeId,
+        'Employee Name': employeeName || '',
+        'Date':          date,
+        'Subject':       subject,
+        'Description':   description || '',
+        'Issued By':     issuedBy    || '',
+        'Acknowledged':  false,
+        'Created At':    new Date().toISOString()
+      };
+      if (severity) fields['Severity'] = severity;
+      if (fileUrl)  fields['File'] = [{ url: fileUrl, filename: fileName || 'document' }];
+      const data = await at(table, { method: 'POST', body: JSON.stringify({ fields }) });
       return res.status(200).json(mapRecord(data));
     }
+
+    // ── PATCH ────────────────────────────────────────────────────
     if (req.method === 'PATCH') {
-      const { id, ...fields } = req.body || {};
+      const body = req.body || {};
+      const { id, ...fields } = body;
       if (!id) return res.status(400).json({ error: 'ID required' });
       const af = {};
-      if (fields.date !== undefined) af['Date'] = fields.date;
-      if (fields.subject !== undefined) af['Subject'] = fields.subject;
-      if (fields.description !== undefined) af['Description'] = fields.description;
-      if (fields.severity !== undefined) af['Severity'] = fields.severity || null;
-      if (fields.issuedBy !== undefined) af['Issued By'] = fields.issuedBy;
-      if (fields.acknowledged !== undefined) af['Acknowledged'] = fields.acknowledged;
-      if (fields.acknowledgedDate !== undefined) af['Acknowledged Date'] = fields.acknowledgedDate;
-      if (fields.fileUrl) af['File'] = [{ url: fields.fileUrl, filename: fields.fileName||'document' }];
+      if (fields.date             !== undefined) af['Date']             = fields.date;
+      if (fields.subject          !== undefined) af['Subject']          = fields.subject;
+      if (fields.description      !== undefined) af['Description']      = fields.description;
+      if (fields.severity         !== undefined) af['Severity']         = fields.severity || null;
+      if (fields.issuedBy         !== undefined) af['Issued By']        = fields.issuedBy;
+      if (fields.acknowledged     !== undefined) af['Acknowledged']     = fields.acknowledged;
+      if (fields.acknowledgedDate !== undefined) af['Acknowledged Date']= fields.acknowledgedDate;
+      if (fields.fileUrl)                        af['File']             = [{ url: fields.fileUrl, filename: fields.fileName || 'document' }];
       const data = await at(`${table}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: af }) });
       return res.status(200).json(mapRecord(data));
     }
+
+    // ── DELETE ───────────────────────────────────────────────────
     if (req.method === 'DELETE') {
       const { id } = req.body || {};
       if (!id) return res.status(400).json({ error: 'ID required' });
       await at(`${table}/${id}`, { method: 'DELETE' });
       return res.status(200).json({ deleted: true });
     }
+
     return res.status(405).json({ error: 'Method not allowed' });
-  } catch(e) { return res.status(500).json({ error: e.message || 'Server error' }); }
+
+  } catch (e) {
+    console.error('[warnings] error:', e.message, e.stack);
+    return res.status(500).json({ error: e.message || 'Server error' });
+  }
 };
