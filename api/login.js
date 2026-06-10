@@ -64,6 +64,7 @@ module.exports = async function handler(req, res) {
     const email = rec.fields['Email'] || '';
     const department = rec.fields['Department'] || '';
     const jobTitle = rec.fields['Job Title'] || '';
+    const appAccess = rec.fields['App Access'] || [];   // Multiple Select → array of app names
     const photos = rec.fields['Photo'] || [];
     const photo = photos[0]?.url || '';
 
@@ -78,6 +79,7 @@ module.exports = async function handler(req, res) {
         employeeId: rec.id,
         department,
         jobTitle,
+        appAccess,
         photo
       }
     });
