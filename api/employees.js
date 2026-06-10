@@ -29,7 +29,7 @@ function mapRecord(r) {
     endDate: r.fields['End Date'] || '',
     dob: r.fields['Date of Birth'] || '',
     notes: r.fields['Notes'] || '',
-    active: r.fields['Active'] !== false,
+    active: r.fields['Active'] === 'Active',   // single-select string -> boolean for the UI
     // Driver's license — admin only
     licenseNumber: r.fields['License Number'] || '',
     licenseClass: r.fields['License Class'] || '',
@@ -114,7 +114,7 @@ module.exports = async function handler(req, res) {
           'Cell Phone': '', 'Office Phone': '', 'Home Phone': '', 'Email': email||'', 'Employment Status': null,
           'Emergency Contact Name': emergencyName||'', 'Emergency Contact Phone': emergencyPhone||'',
           'Emergency Contact Relation': emergencyRelation||'',
-          'Start Date': startDate||'', 'Notes': notes||'', 'Active': true
+          'Start Date': startDate||'', 'Notes': notes||'', 'Active': 'Active'
         }})
       });
       return res.status(200).json(mapRecord(data));
@@ -150,7 +150,7 @@ module.exports = async function handler(req, res) {
       if (fields.endDate !== undefined) airtableFields['End Date'] = fields.endDate || null;
       if (fields.dob !== undefined) airtableFields['Date of Birth'] = fields.dob || null;
       if (fields.notes !== undefined) airtableFields['Notes'] = fields.notes;
-      if (fields.active !== undefined) airtableFields['Active'] = fields.active === true || fields.active === 'true';
+      if (fields.active !== undefined) airtableFields['Active'] = (fields.active === true || fields.active === 'true') ? 'Active' : 'Inactive';
       if (fields.licenseNumber !== undefined) airtableFields['License Number'] = fields.licenseNumber;
       if (fields.licenseClass !== undefined) airtableFields['License Class'] = fields.licenseClass;
       if (fields.licenseExpiry !== undefined) airtableFields['License Expiry'] = fields.licenseExpiry || null;
