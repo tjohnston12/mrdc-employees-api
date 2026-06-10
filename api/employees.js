@@ -62,6 +62,17 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   const table = encodeURIComponent(EMPLOYEES_TABLE);
 
+  // ── Authorization context (identity comes from the app's session headers) ──
+  const userRole = String(req.headers['x-user-role'] || '');
+  const userId   = String(req.headers['x-user-id'] || '');
+  const userName = String(req.headers['x-user-name'] || '');
+  const isAdmin   = userRole === 'Admin' || userRole === 'Owner';
+  const isManager = userRole === 'Manager';
+  // Fields a regular employee may change on their OWN record (mirrors the edit form)
+  const SELF_FIELDS = ['name','email','cellPhone','officePhone','homePhone','emergencyName','emergencyPhone','emergencyRelation','photoUrl','photoFileName'];
+  // Privileged / sensitive fields only an admin may change
+  const PRIVILEGED = ['active','notes','dob','role','licenseNumber','licenseClass','licenseExpiry','licenseProvince','licenseRestrictions','licenseEndorsements','abstractDate'];
+
   try {
     // GET field metadata (for dropdowns)
     if (req.method === 'GET' && req.query.meta === 'fields') {
@@ -105,6 +116,7 @@ module.exports = async function handler(req, res) {
 
     // POST — create
     if (req.method === 'POST') {
+      if (!isAdmin) return res.status(403).json({ error: 'Not authorized to create employees' });
       const { name, jobTitle, department, phone, email, emergencyName, emergencyPhone, emergencyRelation, startDate, notes } = req.body || {};
       if (!name) return res.status(400).json({ error: 'Name is required' });
       const data = await at(table, {
@@ -124,6 +136,29 @@ module.exports = async function handler(req, res) {
     if (req.method === 'PATCH') {
       const { id, ...fields } = req.body || {};
       if (!id) return res.status(400).json({ error: 'ID required' });
+
+      // ── Authorization: who may edit which record, and which fields ──
+      if (!isAdmin) {
+        if (userId && userId === id) {
+          // Editing own record — keep only the self-service fields
+          Object.keys(fields).forEach(f => { if (!SELF_FIELDS.includes(f)) delete fields[f]; });
+        } else if (isManager) {
+          // Manager — may edit a direct report's record, minus privileged fields
+          let target;
+          try { target = await at(`${table}/${id}`); }
+          catch (e) { return res.status(404).json({ error: 'Employee not found' }); }
+          const mgrName = Array.isArray(target.fields['Manager'])
+            ? (target.fields['Manager'][0]?.name || '')
+            : (target.fields['Manager'] || '');
+          if (!userName || mgrName !== userName) {
+            return res.status(403).json({ error: 'You can only edit your own team members' });
+          }
+          PRIVILEGED.forEach(f => { delete fields[f]; });
+        } else {
+          return res.status(403).json({ error: 'You can only edit your own profile' });
+        }
+      }
+
       const airtableFields = {};
       if (fields.name !== undefined) airtableFields['Name'] = fields.name;
       if (fields.jobTitle !== undefined) {
@@ -175,6 +210,7 @@ module.exports = async function handler(req, res) {
 
     // DELETE
     if (req.method === 'DELETE') {
+      if (!isAdmin) return res.status(403).json({ error: 'Not authorized to delete employees' });
       const { id } = req.body || {};
       if (!id) return res.status(400).json({ error: 'ID required' });
       await at(`${table}/${id}`, { method: 'DELETE' });
