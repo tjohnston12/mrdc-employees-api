@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
 
     // Check active
     console.log('[login debug] Active field:', rec.fields['Active'], typeof rec.fields['Active']);
-    if (rec.fields['Active'] === false) {
+    if (rec.fields['Active'] === 'Inactive') {
       return res.status(401).json({ error: 'Your account has been deactivated. Please contact your administrator.' });
     }
 
