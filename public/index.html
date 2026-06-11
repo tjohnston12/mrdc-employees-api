@@ -1,0 +1,3115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MRDC — Employee Directory</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzFFMkI1RSIvPjx0ZXh0IHg9IjE2IiB5PSIyMiIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjQzlBODRDIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5NPC90ZXh0Pjwvc3ZnPg=="/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1E2B5E;--navy-light:#2D3F8A;--gold:#C9A84C;--gold-light:#E8CC7A;
+  --bg:#F4F3EF;--white:#FFFFFF;--text:#1a1a1a;--muted:#6B6B6B;--border:#DDD9D0;
+  --green:#0F6E56;--red:#A32D2D;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.hidden{display:none!important}
+
+
+/* ── EDIT SLIDE-IN PANEL ── */
+.edit-panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300;opacity:0;transition:opacity 0.25s;pointer-events:none}
+.edit-panel-overlay.open{opacity:1;pointer-events:all}
+.edit-panel{position:fixed;top:0;right:0;height:100vh;width:100%;max-width:480px;background:#fff;z-index:301;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);overflow-y:auto;display:flex;flex-direction:column}
+.edit-panel.open{transform:translateX(0)}
+.edit-panel-header{background:var(--navy);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:1}
+.edit-panel-header h3{color:#fff;font-size:1rem;font-weight:600;margin:0}
+.edit-panel-body{flex:1;padding:1.5rem;overflow-y:auto}
+.edit-panel-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;background:#fff;position:sticky;bottom:0}
+
+/* ── LOGIN ── */
+.login-page{min-height:100vh;background:#f0f0ee;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
+.login-wrap{width:100%;max-width:400px}
+.login-shell{position:relative;border-radius:16px 16px 0 0;padding:2.5rem 1.5rem;display:flex;flex-direction:column;align-items:center;overflow:hidden;background:var(--navy)}
+.login-card{background:#fff;border:0.5px solid #e0e0de;border-radius:0 0 16px 16px;padding:2rem;width:100%;box-shadow:0 2px 16px rgba(0,0,0,0.06)}
+.login-icon{width:72px;height:72px;border-radius:50%;background:#EEF0F8;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:32px;color:var(--navy)}
+.login-title{font-size:20px;font-weight:600;text-align:center;margin-bottom:4px;color:var(--text)}
+.login-sub{font-size:13px;color:var(--navy);font-weight:600;text-align:center;margin-bottom:1.5rem}
+.field{margin-bottom:1.1rem}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);transition:border-color 0.15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--navy)}
+.field textarea{resize:vertical;min-height:80px}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:42px}
+.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:17px;display:flex;align-items:center}
+.btn-primary{width:100%;padding:12px;background:var(--navy);color:var(--white);border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.02em;transition:background 0.15s}
+.btn-primary:hover{background:var(--navy-light)}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.err-box{background:#FFF0F0;border:1.5px solid #F0BEBE;border-radius:6px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:1rem;display:none;align-items:center;gap:8px}
+.err-box.show{display:flex}
+
+/* ── APP SHELL ── */
+.app-shell{min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--navy);padding:0 1.5rem;height:56px;display:flex;align-items:center;gap:16px;flex-shrink:0}
+.topbar-logo{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--white)}
+.topbar-logo span{color:var(--gold)}
+.topbar-title{color:rgba(255,255,255,0.6);font-size:13px;border-left:1px solid rgba(255,255,255,0.2);padding-left:16px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.user-chip{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;background:rgba(255,255,255,0.1);color:var(--white);font-size:13px}
+.user-av{width:26px;height:26px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--navy);flex-shrink:0;overflow:hidden}
+.user-av img{width:100%;height:100%;object-fit:cover}
+.role-pip{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:600;letter-spacing:0.04em}
+.pip-owner{background:#fff;color:var(--navy)}
+.pip-admin{background:var(--gold);color:var(--navy)}
+.pip-manager{background:#4A7FC1;color:#fff}
+.pip-employee{background:rgba(255,255,255,0.2);color:#fff}
+.btn-sm{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--text);display:inline-flex;align-items:center;gap:4px;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.btn-sm:hover{background:var(--bg)}
+.btn-sm.ghost-white{border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.8)}
+.btn-sm.ghost-white:hover{background:rgba(255,255,255,0.1)}
+.btn-sm.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn-sm.primary:hover{background:var(--navy-light)}
+.btn-sm.danger{border-color:#F0BEBE;color:var(--red)}
+.btn-sm.danger:hover{background:#FFF0F0}
+
+.app-content{flex:1;padding:2rem 1.5rem;max-width:1100px;margin:0 auto;width:100%}
+
+/* ── SEARCH BAR ── */
+.search-bar{display:flex;gap:10px;margin-bottom:1.75rem;align-items:center;flex-wrap:wrap}
+.search-input-wrap{flex:1;min-width:200px}
+#qfr > button,#qfr > a{min-width:190px}
+.search-input-wrap{position:relative;flex:1;min-width:200px}
+.search-input-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px}
+.search-input{width:100%;padding:10px 14px 10px 38px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text)}
+.search-input:focus{outline:none;border-color:var(--navy)}
+.filter-select{padding:10px 14px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);min-width:160px}
+.filter-select:focus{outline:none;border-color:var(--navy)}
+
+/* ── DIRECTORY GRID ── */
+.section-heading{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--navy);margin-bottom:1rem}
+.emp-grid{display:flex;flex-direction:column;gap:2rem}
+.depot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.depot-group-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--border)}
+.depot-group-name{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.07em;display:flex;align-items:center;gap:6px}
+.depot-count{background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px}
+.emp-card{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.25rem 1rem;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
+.emp-card:hover{border-color:var(--navy);transform:translateY(-2px);box-shadow:0 8px 24px rgba(30,43,94,0.1)}
+/* ── MOBILE LIST VIEW ── */
+.emp-list-item{display:flex;flex-direction:row;align-items:center;gap:12px;padding:12px;cursor:pointer;background:var(--white);border-bottom:1px solid var(--border);position:relative;transition:background 0.15s}
+.emp-list-item:first-child{border-radius:10px 10px 0 0;border-top:1.5px solid var(--border)}
+.emp-list-item:last-child{border-radius:0 0 10px 10px;border-bottom:1.5px solid var(--border)}
+.emp-list-item:only-child{border-radius:10px;border:1.5px solid var(--border)}
+.emp-list-item:hover{background:#F8F8F6}
+.emp-list-item.inactive{opacity:0.6}
+.emp-list-item .emp-photo{width:46px;height:46px;border-radius:50%;flex-shrink:0;min-width:46px;margin:0;font-size:1.1rem}
+.emp-list-item .emp-info{flex:1;min-width:0}
+.emp-list-item .emp-name{font-size:14px;font-weight:600;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emp-list-item .emp-title{font-size:12px;color:var(--muted);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emp-photo{width:50%;aspect-ratio:1/1;border-radius:8px;margin:0 auto 0.75rem;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:2rem;color:var(--white);overflow:hidden}
+.emp-photo img{width:100%;height:100%;object-fit:cover}
+.emp-name{font-weight:600;font-size:14px;margin-bottom:3px;color:var(--text)}
+.emp-title{font-size:12px;color:var(--muted);margin-bottom:4px}
+.emp-dept{font-size:11px;font-weight:600;color:var(--navy);background:#EEF0F8;padding:2px 8px;border-radius:99px;display:inline-block}
+.status-active{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:#E1F5EE;color:#085041;border:1px solid #6FCF97}
+.status-inactive{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:#f5f5f3;color:#999;border:1px solid #DDD9D0}
+.emp-card.inactive{opacity:0.6}
+.emp-card .edit-btn{position:absolute;top:8px;right:8px;opacity:0;transition:opacity 0.15s}
+.emp-card:hover .edit-btn{opacity:1}
+
+/* ── PROFILE MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(2px)}
+.modal{background:var(--white);border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.2)}
+.modal-header{background:var(--navy);padding:1.5rem;border-radius:16px 16px 0 0;display:flex;align-items:center;gap:14px}
+.modal-photo{width:112px;height:112px;border-radius:14px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:2.4rem;color:var(--white);flex-shrink:0;overflow:hidden;border:3px solid rgba(255,255,255,0.3)}
+.modal-photo img{width:100%;height:100%;object-fit:cover}
+.modal-name{font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--white)}
+.modal-subtitle{font-size:13px;color:rgba(255,255,255,0.65);margin-top:2px}
+.modal-body{padding:1.5rem}
+.info-section{margin-bottom:1.25rem}
+.info-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem;padding-bottom:6px;border-bottom:1.5px solid var(--border)}
+.info-row{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:14px;border-bottom:1px solid #f5f4f0}
+.info-row:last-child{border-bottom:none}
+.info-row i{font-size:16px;color:var(--navy);width:20px;flex-shrink:0}
+.info-label{color:var(--muted);font-size:12px;min-width:100px}
+.info-val{color:var(--text);font-weight:500}
+.info-val a{color:var(--navy);text-decoration:none}
+.info-val a:hover{text-decoration:underline}
+.info-row.missing{background:#fde7e7;border-radius:6px;margin:2px -8px;padding-left:8px;padding-right:8px}
+.modal-footer{padding:1rem 1.5rem;border-top:1.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+/* ── EDIT FORM ── */
+.edit-form{padding:1.5rem}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.section-divider{font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.08em;margin:1.25rem 0 0.75rem;padding-bottom:6px;border-bottom:1.5px solid var(--navy)}
+.photo-upload{display:flex;align-items:center;gap:14px;margin-bottom:1rem;padding:12px;background:var(--bg);border-radius:8px}
+.photo-preview{width:56px;height:56px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--white);overflow:hidden;flex-shrink:0}
+.photo-preview img{width:100%;height:100%;object-fit:cover}
+
+/* ── ADMIN PANEL ── */
+.admin-tabs{display:flex;gap:4px;background:#EEECEA;border-radius:8px;padding:4px;margin-bottom:1.5rem}
+.admin-tab{flex:1;padding:8px;border-radius:6px;border:none;background:transparent;font-size:13px;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:500;transition:all 0.15s}
+.admin-tab.active{background:var(--white);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:8px;font-size:14px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--red)}
+
+.empty{text-align:center;padding:3rem;color:var(--muted);font-size:14px}
+.license-ok{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#E1F5EE;color:#085041;border:1px solid #6FCF97}
+.license-warn{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#FAEEDA;color:#633806;border:1px solid #EF9F27}
+.license-expired{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#FFF0F0;color:var(--red);border:1px solid #F0BEBE}
+.sev-low{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#EEF0F8;color:var(--navy)}
+.sev-medium{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#FAEEDA;color:#633806}
+.sev-high{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#FFF0F0;color:var(--red)}
+.sev-critical{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--red);color:#fff}
+.empty i{font-size:36px;display:block;margin-bottom:10px;color:var(--border)}
+.loading{text-align:center;padding:3rem;color:var(--muted)}
+
+/* ── RESPONSIVE: Tablet (≤ 768px) ─────────────────────────── */
+@media(max-width:768px){
+  .field-row{grid-template-columns:1fr}
+  .app-content{padding:1.5rem 1rem}
+  .emp-grid{gap:1.5rem}
+  .depot-grid{gap:12px}
+  .modal-overlay{padding:0.75rem}
+  .filter-select{min-width:120px}
+  .btn-sm{min-height:38px}
+}
+
+/* ── RESPONSIVE: Phone (≤ 480px) ──────────────────────────── */
+@media(max-width:480px){
+  /* Topbar */
+  .topbar{padding:0 0.75rem;gap:8px}
+  .topbar-title{display:none}
+  .topbar-right{gap:4px}
+  .topbar .btn-label{display:none}
+  #top-name,#top-role{display:none}
+
+  /* Content */
+  .app-content{padding:0.875rem 0.75rem}
+
+  /* Quick Forms — compact horizontal icon strip */
+  #quick-forms-section{margin-bottom:0.875rem}
+  #qfr{flex-wrap:nowrap !important;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none;gap:8px !important}
+  #qfr::-webkit-scrollbar{display:none}
+  #qfr > button,#qfr > a{flex-shrink:0;padding:10px !important;gap:0 !important;min-width:0}
+  #qfr > button > div + div,#qfr > a > div + div{display:none}
+
+  /* Search — full-width input, filters below */
+  .search-bar{gap:8px;margin-bottom:1.25rem}
+  .search-input-wrap{flex-basis:100%;min-width:0}
+  .filter-select{min-width:0;flex:1;font-size:12px}
+
+  /* Employee directory — list view */
+  .emp-grid{gap:1rem}
+  .depot-grid{display:flex;flex-direction:column;gap:0}
+  .depot-group-header{margin-bottom:8px;padding-bottom:6px}
+  .emp-card{display:flex;flex-direction:row;align-items:center;gap:12px;padding:10px 12px;text-align:left}
+  .emp-card:hover{transform:none}
+  .emp-photo{width:46px;height:46px;border-radius:50%;flex-shrink:0;min-width:46px;margin:0;font-size:1.1rem}
+  .emp-info{flex:1;min-width:0}
+  .emp-name{font-size:14px;font-weight:600;margin-bottom:1px}
+  .emp-title{font-size:12px;margin-bottom:3px}
+  .emp-dept{font-size:10px}
+  .emp-links{justify-content:flex-start !important;margin-top:6px !important;padding-top:6px !important}
+  .emp-card .edit-btn{top:6px;right:6px}
+
+  /* Modals — slide up from bottom */
+  .modal-overlay{padding:0.25rem;align-items:flex-end}
+  .modal{border-radius:16px 16px 0 0;max-height:94vh}
+  .modal-header{padding:1rem 1.1rem}
+  .modal-photo{width:84px;height:84px;border-radius:12px;font-size:1.8rem}
+  .modal-body{padding:1rem}
+  .modal-footer{padding:0.75rem 1rem;gap:8px;flex-wrap:wrap}
+  .modal-footer .btn-sm{flex:1;min-width:100px;justify-content:center}
+
+  /* Touch targets */
+  .btn-sm{min-height:40px;padding:8px 12px}
+
+  /* Leave table */
+  .leave-table{font-size:12px}
+  .leave-table th,.leave-table td{padding:5px 8px}
+
+  /* Admin tabs — horizontal scroll */
+  .admin-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:2px}
+  .admin-tab{white-space:nowrap;font-size:11px;padding:8px 10px}
+
+  /* Toast */
+  .toast{width:calc(100% - 2rem);white-space:normal;text-align:center}
+}
+
+/* ── Touch devices: card interactions ─────────────────────── */
+@media(hover:none){
+  .emp-card .edit-btn{opacity:0.75}               /* always visible on touch */
+  .emp-card:hover{transform:none;box-shadow:none;border-color:var(--border)}
+}
+
+/* -- LEAVE REQUEST -- */
+.leave-status-pending{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#FAEEDA;color:#633806;border:1px solid #EF9F27}
+.leave-status-manager-approved{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#EEF0F8;color:var(--navy);border:1px solid #4A7FC1}
+.leave-status-approved{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#E1F5EE;color:#085041;border:1px solid #6FCF97}
+.leave-status-filed{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#E1F5EE;color:#085041;border:1px solid #6FCF97}
+.leave-status-denied{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#FFF0F0;color:#A32D2D;border:1px solid #F0BEBE}
+.leave-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:0.5rem}
+.leave-table th{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;padding:6px 8px;text-align:left;border-bottom:1.5px solid var(--border);background:var(--bg)}
+.leave-table td{padding:7px 8px;border-bottom:1px solid #f5f4f0;vertical-align:middle}
+.leave-table tr:last-child td{border-bottom:none}
+.leave-table input[type=text],.leave-table input[type=date]{width:100%;padding:6px 8px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--muted)}
+.leave-table input:not(:disabled):focus{outline:none;border-color:var(--navy)}
+
+/* ── LEAVE CALENDAR ── */
+.cal-cell{border-right:1px solid #f0ede8;border-bottom:1px solid #f0ede8;min-height:80px;padding:4px;position:relative;background:#fff}
+.cal-cell:nth-child(7n){border-right:none}
+.cal-cell.other-month{background:#faf9f7}
+.cal-cell.today{background:#EEF0F8}
+.cal-day-num{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:2px;line-height:1}
+.cal-cell.today .cal-day-num{color:var(--navy);font-weight:700}
+.cal-event{font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;line-height:1.6}
+.cal-event:hover{opacity:0.8}
+.cal-more{font-size:10px;color:var(--muted);cursor:pointer;padding:1px 4px}
+.cal-more:hover{color:var(--navy)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-page" class="login-page">
+  <div class="login-wrap">
+    <div class="login-shell">
+      <div style="font-family:'DM Serif Display',serif;font-size:2rem;color:#fff;letter-spacing:-0.02em;margin-bottom:4px">MR<span style="color:var(--gold)">D</span>C</div>
+      <div style="color:rgba(255,255,255,0.5);font-size:12px;letter-spacing:0.1em;text-transform:uppercase">Operations Corporation</div>
+    </div>
+    <div class="login-card">
+      <div class="login-icon"><i class="ti ti-users"></i></div>
+      <div class="login-title">Employee Directory</div>
+      <div class="login-sub">Sign in to your account</div>
+      <div class="err-box" id="err-box"><i class="ti ti-alert-circle" style="font-size:16px;flex-shrink:0"></i><span id="err-txt">Invalid username or password.</span></div>
+      <form id="login-form" autocomplete="on" style="margin:0" onsubmit="event.preventDefault();doLogin();return false;">
+      <div class="field"><label for="inp-user">Username</label><input type="text" id="inp-user" name="username" placeholder="your.username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"/></div>
+      <div class="field"><label for="inp-pw">Password</label>
+        <div class="pw-wrap"><input type="password" id="inp-pw" name="password" placeholder="••••••••" autocomplete="current-password"/>
+        <button type="button" class="pw-eye" onclick="togglePw()" aria-label="Toggle password"><i class="ti ti-eye" id="pw-icon"></i></button></div>
+      </div>
+      <button type="submit" class="btn-primary" id="login-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;border-radius:8px;font-size:15px;font-weight:500">
+        <i class="ti ti-login" style="font-size:16px"></i> Sign in
+      </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-shell" class="app-shell hidden">
+  <div class="topbar">
+    <div class="topbar-logo">MR<span>D</span>C</div>
+    <div class="topbar-title">Employee Directory</div>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="user-av" id="top-avatar">—</div>
+        <span id="top-name">—</span>
+        <span class="role-pip" id="top-role">—</span>
+      </div>
+            <button id="file-requests-btn" onclick="openAllLeaveRequestsModal()" style="display:none;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.9);font-family:'DM Sans',sans-serif;transition:all 0.15s">
+        <i class="ti ti-folder-check" style="font-size:13px"></i><span class="btn-label"> Ready to File</span>
+        <span id="file-requests-count" style="display:none;background:#EF9F27;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:99px;min-width:16px;text-align:center;margin-left:2px"></span>
+      </button>
+      <button class="btn-sm ghost-white" onclick="showView('directory')" id="home-btn" style="display:none"><i class="ti ti-home" style="font-size:13px"></i><span class="btn-label"> Home</span></button>
+            <a href="https://www.mrdc-htra.com/safety" target="_blank" rel="noopener" class="btn-sm ghost-white" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px"><i class="ti ti-shield-check" style="font-size:13px;color:#EF9F27"></i><span class="btn-label"> Safety</span></a>
+            <button class="btn-sm ghost-white" onclick="doLogout()"><i class="ti ti-logout" style="font-size:13px"></i><span class="btn-label"> Sign out</span></button>
+    </div>
+  </div>
+
+  <div class="app-content">
+
+    <!-- Employee/Manager view -->
+    <div id="view-directory">
+      <!-- QUICK FORMS -->
+      <div id="quick-forms-section" style="margin-bottom:1.5rem">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Quick Forms</div>
+        <div id="qfr" style="display:flex;flex-wrap:wrap;gap:10px">
+
+          <button onclick="showView('vacation')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s" onmouseover="this.style.borderColor='var(--navy)';this.style.boxShadow='0 4px 12px rgba(30,43,94,0.1)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
+            <div style="width:36px;height:36px;border-radius:8px;background:#EEF0F8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="ti ti-calendar-plus" style="font-size:18px;color:var(--navy)"></i>
+            </div>
+            <div style="text-align:left">
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Vacation Request</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:1px">Application for leave</div>
+            </div>
+          </button>
+
+          <button onclick="openMyProfileModal()" style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s" onmouseover="this.style.borderColor='var(--navy)';this.style.boxShadow='0 4px 12px rgba(30,43,94,0.1)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
+            <div style="width:36px;height:36px;border-radius:8px;background:#EEF0F8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="ti ti-user-edit" style="font-size:18px;color:var(--navy)"></i>
+            </div>
+            <div style="text-align:left">
+              <div style="font-size:13px;font-weight:600;color:var(--text)">My Profile</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:1px">Update contact &amp; emergency info</div>
+            </div>
+          </button>
+
+          <button id="all-requests-btn" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s" onclick="openMyRequestsModal()" onmouseover="this.style.borderColor='var(--navy)';this.style.boxShadow='0 4px 12px rgba(30,43,94,0.1)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
+            <div style="width:36px;height:36px;border-radius:8px;background:#EEF0F8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="ti ti-list" style="font-size:18px;color:var(--navy)"></i>
+            </div>
+            <div style="text-align:left">
+              <div style="font-size:13px;font-weight:600;color:var(--text)">My Leave Requests</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:1px">View your submissions</div>
+            </div>
+          </button>
+
+          <button id="all-leave-btn" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s" onclick="openAllLeaveRequestsModal()" onmouseover="this.style.borderColor='var(--navy)';this.style.boxShadow='0 4px 12px rgba(30,43,94,0.1)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
+            <div style="width:36px;height:36px;border-radius:8px;background:#EEF0F8;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative">
+              <i class="ti ti-list-check" style="font-size:18px;color:var(--navy)"></i>
+              <span id="all-leave-count" style="display:none;position:absolute;top:-5px;right:-5px;background:#EF9F27;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:99px;min-width:16px;text-align:center"></span>
+            </div>
+            <div style="text-align:left">
+              <div style="font-size:13px;font-weight:600;color:var(--text)">All Leave Requests</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:1px">Review &amp; approve</div>
+            </div>
+          </button>
+
+          <button onclick="openCalendarModal()" style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s" onmouseover="this.style.borderColor='var(--navy)';this.style.boxShadow='0 4px 12px rgba(30,43,94,0.1)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
+            <div style="width:36px;height:36px;border-radius:8px;background:#EEF0F8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="ti ti-calendar-month" style="font-size:18px;color:var(--navy)"></i>
+            </div>
+            <div style="text-align:left">
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Leave Calendar</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:1px">Approved leave — all employees</div>
+            </div>
+          </button>
+
+          <button id="reset-pw-btn" onclick="el('reset-password-modal').classList.remove('hidden')" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s" onmouseover="this.style.borderColor='var(--navy)';this.style.boxShadow='0 4px 12px rgba(30,43,94,0.1)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
+            <div style="width:36px;height:36px;border-radius:8px;background:#EEF0F8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="ti ti-key" style="font-size:18px;color:var(--navy)"></i>
+            </div>
+            <div style="text-align:left">
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Reset Password</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:1px">Admin — update any user's password</div>
+            </div>
+          </button>
+
+          <button id="change-my-pw-btn" onclick="el('cp-error').style.display='none';el('cp-success').style.display='none';el('change-password-modal').classList.remove('hidden')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s" onmouseover="this.style.borderColor='var(--navy)';this.style.boxShadow='0 4px 12px rgba(30,43,94,0.1)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
+            <div style="width:36px;height:36px;border-radius:8px;background:#EEF0F8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="ti ti-lock" style="font-size:18px;color:var(--navy)"></i>
+            </div>
+            <div style="text-align:left">
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Change My Password</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:1px">Update your own password</div>
+            </div>
+          </button>
+
+          <!-- MORE FORMS ADDED HERE -->
+
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <div class="search-input-wrap">
+          <i class="ti ti-search" aria-hidden="true"></i>
+          <input type="text" class="search-input" id="search-input" placeholder="Search by name, title, department…" oninput="debounceSearch()"/>
+        </div>
+        <select class="filter-select" id="status-filter" onchange="doSearch()" style="min-width:130px">
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <select class="filter-select" id="dept-filter" onchange="doSearch()">
+          <option value="">All departments</option>
+        </select>
+        <button class="btn-sm primary" id="add-emp-btn" style="display:none" onclick="openAddModal()"><i class="ti ti-user-plus" style="font-size:13px"></i> Add employee</button>
+      </div>
+      <div class="section-heading" id="dir-heading">All employees</div>
+      <div id="emp-grid" class="emp-grid"><div class="loading"><i class="ti ti-loader" style="font-size:28px;display:block;margin-bottom:8px"></i>Loading...</div></div>
+      <div id="inactive-section" style="display:none;margin-top:2.5rem">
+        <div onclick="toggleInactive()" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:12px 16px;background:var(--white);border:1px solid var(--border);border-radius:12px;user-select:none">
+          <i class="ti ti-chevron-right" id="inactive-chev" style="font-size:16px;color:var(--muted);transition:transform 0.2s"></i>
+          <span style="font-family:'DM Serif Display',serif;font-size:1.05rem;color:var(--navy)">Inactive employees</span>
+          <span id="inactive-count" style="font-size:12px;font-weight:600;color:var(--muted);background:var(--bg);padding:2px 9px;border-radius:99px">0</span>
+        </div>
+        <div id="inactive-grid" style="display:none;margin-top:1rem"></div>
+      </div>
+    </div>
+
+    <!-- VACATION REQUEST PAGE -->
+    <div id="view-vacation" class="hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:12px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn-sm" onclick="showView('directory')" style="gap:6px"><i class="ti ti-arrow-left" style="font-size:13px"></i> Back to Directory</button>
+          <div>
+            <div class="section-heading" style="margin-bottom:0">Application for Leave</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">MRDC Operations Corporation</div>
+          </div>
+        </div>
+        <button class="btn-sm" id="my-requests-btn" onclick="openMyRequestsModal()" style="gap:6px">
+          <i class="ti ti-history" style="font-size:13px"></i> My Requests
+          <span id="my-requests-badge" style="display:none;background:var(--navy);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:2px"></span>
+        </button>
+      </div>
+      <div style="max-width:760px;display:grid;gap:20px">
+        <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;overflow:hidden">
+          <div style="background:var(--navy);padding:14px 20px;display:flex;align-items:center;gap:10px">
+            <i class="ti ti-user" style="color:rgba(255,255,255,0.7);font-size:16px"></i>
+            <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.02em">Employee Information</span>
+          </div>
+          <div style="padding:16px 20px">
+            <div class="field-row">
+              <div class="field" style="margin-bottom:0"><label>Employee name</label><input type="text" id="leave-emp-name" readonly style="background:var(--bg);color:var(--muted)"/></div>
+              <div class="field" style="margin-bottom:0"><label>Date of request</label><input type="date" id="leave-date-of-request"/></div>
+            </div>
+            <div class="field" style="margin-bottom:0;margin-top:12px">
+              <label>Manager</label>
+              <input type="text" id="leave-manager-display" readonly style="background:var(--bg);color:var(--muted)" placeholder="No manager assigned"/>
+            </div>
+            <div class="field" style="margin-bottom:0;margin-top:12px">
+              <label style="display:flex;align-items:center;justify-content:space-between">Location<span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)" id="leave-location-hint"></span></label>
+              <select id="leave-location" onchange="el('leave-location-hint').textContent=''">
+                <option value="">-- Select location --</option>
+                <option>Mazerolle Depot</option>
+                <option>Oromocto - Head Office / Depot</option>
+                <option>Bagdad Depot</option>
+                <option>River Glade Depot</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;overflow:hidden">
+          <div style="background:var(--navy);padding:14px 20px;display:flex;align-items:center;gap:10px">
+            <i class="ti ti-calendar" style="color:rgba(255,255,255,0.7);font-size:16px"></i>
+            <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.02em">Type of Leave</span>
+            <span style="color:rgba(255,255,255,0.55);font-size:12px;margin-left:4px">Specify first and last day. A.M./P.M. for half days.</span>
+          </div>
+          <div style="padding:0 4px 8px;overflow-x:auto">
+            <table class="leave-table" style="margin-bottom:0">
+              <thead><tr>
+                <th style="width:32px;padding-left:16px"></th>
+                <th>Type of leave</th>
+                <th style="width:82px">Work days <span style="color:var(--red)">*</span></th>
+                <th style="min-width:120px">Start date <span style="color:var(--red)">*</span></th>
+                <th style="min-width:120px">End date</th>
+              </tr></thead>
+              <tbody id="leave-rows-body"></tbody>
+            </table>
+          </div>
+          <div id="leave-doctor-wrap" style="display:none;margin:0 16px 16px;background:#fff8ed;border:1.5px solid #EF9F27;border-radius:8px;padding:10px 14px">
+            <div style="font-size:12px;font-weight:600;color:#633806;margin-bottom:8px"><i class="ti ti-stethoscope" style="font-size:13px"></i> Sick Leave - Doctor's Certificate provided?</div>
+            <div style="display:flex;gap:20px">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:400"><input type="radio" name="doctor-cert" value="Yes" id="leave-doc-yes" style="accent-color:var(--navy)"> Yes</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:400"><input type="radio" name="doctor-cert" value="No" id="leave-doc-no" style="accent-color:var(--navy)" checked> No</label>
+            </div>
+          </div>
+        </div>
+        <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;overflow:hidden">
+          <div style="background:var(--navy);padding:14px 20px;display:flex;align-items:center;gap:10px">
+            <i class="ti ti-notes" style="color:rgba(255,255,255,0.7);font-size:16px"></i>
+            <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.02em">Details</span>
+          </div>
+          <div style="padding:16px 20px">
+            <div class="field" style="margin-bottom:0"><label>Provide any details that will assist in processing this application</label>
+              <textarea id="leave-details" style="min-height:100px" placeholder="e.g. Reason for leave without pay, bereavement details, etc."></textarea>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;padding-bottom:2rem">
+          <button class="btn-sm" onclick="showView('directory')"><i class="ti ti-x" style="font-size:13px"></i> Cancel</button>
+          <button class="btn-sm primary" id="leave-submit-btn" onclick="submitLeaveRequest()" style="padding:10px 24px;font-size:13px"><i class="ti ti-send" style="font-size:13px"></i> Submit Request</button>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div id="profile-modal" class="modal-overlay hidden" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-photo" id="mp-photo"></div>
+      <div>
+        <div class="modal-name" id="mp-name">—</div>
+        <div class="modal-subtitle" id="mp-subtitle">—</div>
+      </div>
+    </div>
+    <div id="own-photo-control" style="display:none;margin:-0.25rem 0 1rem">
+      <input type="file" id="own-photo-input" accept="image/*" style="display:none" onchange="changeOwnPhoto(event)"/>
+      <button class="btn-sm" onclick="document.getElementById('own-photo-input').click()" style="display:inline-flex;align-items:center;gap:6px"><i class="ti ti-camera" style="font-size:14px"></i> Change my photo</button>
+      <span id="own-photo-status" style="font-size:12px;color:var(--muted);margin-left:10px"></span>
+      <div style="font-size:11px;color:var(--muted);margin-top:7px;display:flex;align-items:flex-start;gap:5px"><i class="ti ti-info-circle" style="font-size:13px;flex-shrink:0;margin-top:1px"></i><span>Please use a clear photo of your own face — not an object, logo, or group photo.</span></div>
+    </div>
+    <div id="modal-view">
+      <div class="modal-body">
+        <div class="info-section">
+          <div class="info-section-title">Contact</div>
+          <div class="info-row"><i class="ti ti-mail"></i><span class="info-label">Email</span><span class="info-val" id="mp-email">—</span></div>
+          <div class="info-row"><i class="ti ti-device-mobile"></i><span class="info-label">Cell</span><span class="info-val" id="mp-cell">—</span></div>
+          <div class="info-row"><i class="ti ti-phone"></i><span class="info-label">Office</span><span class="info-val" id="mp-office-phone">—</span></div>
+          <div class="info-row"><i class="ti ti-home"></i><span class="info-label">Home</span><span class="info-val" id="mp-home-phone">—</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">Role</div>
+          <div class="info-row"><i class="ti ti-briefcase"></i><span class="info-label">Job title</span><span class="info-val" id="mp-title">—</span></div>
+          <div class="info-row"><i class="ti ti-building"></i><span class="info-label">Department</span><span class="info-val" id="mp-dept">—</span></div>
+          <div class="info-row"><i class="ti ti-user-check"></i><span class="info-label">Manager</span><span class="info-val" id="mp-manager">—</span></div>
+          <div class="info-row"><i class="ti ti-map-pin"></i><span class="info-label">Depot</span><span class="info-val" id="mp-depot">—</span></div>
+          <div class="info-row"><i class="ti ti-clock"></i><span class="info-label">Status</span><span class="info-val" id="mp-emp-status">—</span></div>
+          <div class="info-row" id="mp-start-row"><i class="ti ti-calendar"></i><span class="info-label">Start date</span><span class="info-val" id="mp-start">—</span></div>
+          <div class="info-row" id="mp-end-row"><i class="ti ti-calendar-off"></i><span class="info-label">End date</span><span class="info-val" id="mp-end">—</span></div>
+          <div class="info-row" id="mp-dob-row" style="display:none"><i class="ti ti-cake"></i><span class="info-label">Date of birth</span><span class="info-val" id="mp-dob">—</span></div>
+        </div>
+        <div class="info-section" id="mp-training-section" style="display:none">
+          <div class="info-section-title">Training (Safety App)</div>
+          <div id="mp-training-content"><div style="font-size:13px;color:var(--muted)">Loading...</div></div>
+        </div>
+        <div class="info-section" id="mp-warnings-section" style="display:none">
+          <div class="info-section-title">Warning letters</div>
+          <div id="mp-warnings-list"><div style="font-size:13px;color:var(--muted)">Loading...</div></div>
+        </div>
+        <div class="info-section" id="mp-license-section" style="display:none">
+          <div class="info-section-title" style="display:flex;align-items:center;justify-content:space-between">
+            Driver's license
+            <span id="mp-license-status"></span>
+          </div>
+          <div class="info-row"><i class="ti ti-id"></i><span class="info-label">License #</span><span class="info-val" id="mp-lic-num">—</span></div>
+          <div class="info-row"><i class="ti ti-certificate"></i><span class="info-label">Class</span><span class="info-val" id="mp-lic-class">—</span></div>
+          <div class="info-row"><i class="ti ti-calendar"></i><span class="info-label">Expiry</span><span class="info-val" id="mp-lic-expiry">—</span></div>
+          <div class="info-row"><i class="ti ti-map-pin"></i><span class="info-label">Province/State</span><span class="info-val" id="mp-lic-province">—</span></div>
+          <div class="info-row"><i class="ti ti-alert-circle"></i><span class="info-label">Restrictions</span><span class="info-val" id="mp-lic-restrictions">—</span></div>
+          <div class="info-row"><i class="ti ti-rosette"></i><span class="info-label">Endorsements</span><span class="info-val" id="mp-lic-endorsements">—</span></div>
+          <div id="mp-lic-photo-row" style="display:none;padding:4px 0">
+            <div id="mp-lic-photos-list"></div>
+          </div>
+        </div>
+        <div class="info-section" id="mp-incidents-section" style="display:none">
+          <div class="info-section-title">Incident reports</div>
+          <div id="mp-incidents-list"><div style="font-size:13px;color:var(--muted)">Loading...</div></div>
+        </div>
+        <div class="info-section" id="mp-abstract-section" style="display:none">
+          <div class="info-section-title">Driver's abstract</div>
+          <div class="info-row"><i class="ti ti-calendar"></i><span class="info-label">Date obtained</span><span class="info-val" id="mp-abstract-date">—</span></div>
+        </div>
+        <div class="info-section" id="mp-abstract-files-section" style="display:none">
+          <div class="info-section-title">Driver's abstract files</div>
+          <div id="mp-abstract-files-list"></div>
+        </div>
+        <div class="info-section" id="mp-emergency-section">
+          <div class="info-section-title">Emergency contact</div>
+          <div class="info-row"><i class="ti ti-user"></i><span class="info-label">Name</span><span class="info-val" id="mp-ec-name">—</span></div>
+          <div class="info-row"><i class="ti ti-phone"></i><span class="info-label">Phone</span><span class="info-val" id="mp-ec-phone">—</span></div>
+          <div class="info-row"><i class="ti ti-heart"></i><span class="info-label">Relation</span><span class="info-val" id="mp-ec-rel">—</span></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sm" onclick="closeProfileModal()"><i class="ti ti-x" style="font-size:13px"></i> Close</button>
+        <button class="btn-sm" id="mp-warning-btn" onclick="openNewWarning()" style="display:none"><i class="ti ti-mail-exclamation" style="font-size:13px"></i> Warning letter</button>
+        <button class="btn-sm" id="mp-incident-btn" onclick="openNewIncident()" style="display:none"><i class="ti ti-alert-triangle" style="font-size:13px"></i> Add incident</button>
+        <button class="btn-sm primary" id="mp-edit-btn" onclick="openEditModal()" style="display:none"><i class="ti ti-edit" style="font-size:13px"></i> Edit profile</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="incident-modal" class="modal-overlay hidden" onclick="closeIncidentModal(event)">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-photo" style="background:rgba(255,255,255,0.2)"><i class="ti ti-alert-triangle" style="font-size:1.4rem;color:#fff"></i></div>
+      <div>
+        <div class="modal-name" id="inc-modal-title">New Incident Report</div>
+        <div class="modal-subtitle" id="inc-modal-subtitle">—</div>
+      </div>
+    </div>
+    <div class="edit-form">
+      <input type="hidden" id="inc-id"/>
+      <input type="hidden" id="inc-emp-id"/>
+      <div class="field-row">
+        <div class="field"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="inc-date"/></div>
+        <div class="field"><label>Type <span style="color:var(--red)">*</span></label>
+          <select id="inc-type">
+            <option value="">— Select type —</option>
+            <option>Near miss</option>
+            <option>Property damage</option>
+            <option>Personal injury</option>
+            <option>Vehicle incident</option>
+            <option>Environmental</option>
+            <option>Safety violation</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Severity</label>
+          <select id="inc-severity">
+            <option value="">— Select —</option>
+            <option>Low</option>
+            <option>Medium</option>
+            <option>High</option>
+            <option>Critical</option>
+          </select>
+        </div>
+        <div class="field"><label>Location</label><input type="text" id="inc-location" placeholder="Zone A — KM 25"/></div>
+      </div>
+      <div class="field"><label>Description <span style="color:var(--red)">*</span></label><textarea id="inc-description" placeholder="Describe what happened…" style="min-height:80px"></textarea></div>
+      <div class="field"><label>Action taken</label><textarea id="inc-action" placeholder="What action was taken…" style="min-height:60px"></textarea></div>
+      <div class="field" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="inc-followup" style="width:16px;height:16px;accent-color:var(--navy)"/>
+        <label for="inc-followup" style="font-size:13px;color:var(--text);cursor:pointer;text-transform:none;letter-spacing:0">Follow-up required</label>
+      </div>
+      <div class="field" id="inc-followup-notes-wrap" style="display:none"><label>Follow-up notes</label><textarea id="inc-followup-notes" placeholder="Describe required follow-up…" style="min-height:60px"></textarea></div>
+      <div class="field" style="margin-top:4px">
+        <label>Document attachment <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+        <div class="photo-upload" style="padding:10px 12px">
+          <div style="width:36px;height:36px;border-radius:6px;background:#EEF0F8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-paperclip" style="font-size:18px;color:var(--navy)"></i>
+          </div>
+          <div>
+            <label for="inc-attach-input" class="btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px"><i class="ti ti-upload" style="font-size:12px"></i> Upload document</label>
+            <input type="file" id="inc-attach-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="handleIncidentAttachment(this)"/>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px" id="inc-attach-status">PDF, JPG, PNG, Word — max 10MB</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm danger" id="inc-delete-btn" style="display:none;margin-right:auto" onclick="deleteIncident()"><i class="ti ti-trash" style="font-size:13px"></i> Delete</button>
+      <button class="btn-sm" onclick="closeIncidentModal()"><i class="ti ti-x" style="font-size:13px"></i> Cancel</button>
+      <button class="btn-sm primary" onclick="saveIncident()"><i class="ti ti-device-floppy" style="font-size:13px"></i> Save report</button>
+    </div>
+  </div>
+</div>
+<div id="warning-modal" class="modal-overlay hidden" onclick="closeWarningModal(event)">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-photo" style="background:rgba(255,255,255,0.2)"><i class="ti ti-mail-exclamation" style="font-size:1.4rem;color:#fff"></i></div>
+      <div>
+        <div class="modal-name" id="warn-modal-title">New Warning Letter</div>
+        <div class="modal-subtitle" id="warn-modal-subtitle">—</div>
+      </div>
+    </div>
+    <div class="edit-form">
+      <input type="hidden" id="warn-id"/>
+      <input type="hidden" id="warn-emp-id"/>
+      <div class="field-row">
+        <div class="field"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="warn-date"/></div>
+        <div class="field"><label>Severity</label>
+          <select id="warn-severity">
+            <option value="">— Select —</option>
+            <option>Verbal</option>
+            <option>Written</option>
+            <option>Final</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Subject <span style="color:var(--red)">*</span></label><input type="text" id="warn-subject" placeholder="Attendance policy violation"/></div>
+      <div class="field"><label>Description</label><textarea id="warn-description" placeholder="Describe the issue…" style="min-height:80px"></textarea></div>
+      <div class="field"><label>Issued by</label><input type="text" id="warn-issued-by" placeholder="Name of issuer"/></div>
+      <div class="field" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="warn-acknowledged" style="width:16px;height:16px;accent-color:var(--navy)" onchange="toggleAckDate()"/>
+        <label for="warn-acknowledged" style="font-size:13px;color:var(--text);cursor:pointer;text-transform:none;letter-spacing:0">Employee acknowledged</label>
+      </div>
+      <div class="field" id="warn-ack-date-wrap" style="display:none">
+        <label>Acknowledgement date</label><input type="date" id="warn-ack-date"/>
+      </div>
+      <div class="field" style="margin-top:4px">
+        <label>Document attachment <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+        <div class="photo-upload" style="padding:10px 12px">
+          <div style="width:36px;height:36px;border-radius:6px;background:#EEF0F8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-paperclip" style="font-size:18px;color:var(--navy)"></i>
+          </div>
+          <div>
+            <label for="warn-attach-input" class="btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px"><i class="ti ti-upload" style="font-size:12px"></i> Upload document</label>
+            <input type="file" id="warn-attach-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="handleWarningAttachment(this)"/>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px" id="warn-attach-status">PDF, JPG, PNG, Word — max 10MB</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm danger" id="warn-delete-btn" style="display:none;margin-right:auto" onclick="deleteWarning()"><i class="ti ti-trash" style="font-size:13px"></i> Delete</button>
+      <button class="btn-sm" onclick="closeWarningModal()"><i class="ti ti-x" style="font-size:13px"></i> Cancel</button>
+      <button class="btn-sm primary" onclick="saveWarning()"><i class="ti ti-device-floppy" style="font-size:13px"></i> Save letter</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://mrdc-employees-api.vercel.app';
+// ── DEPARTMENT HELPERS ──
+function updateDeptLabel(){}  // checkboxes update on save
+
+// ── TIMEZONE ──
+const TZ = 'America/Halifax';
+function nowAtlantic() { return new Date(new Date().toLocaleString('en-US', { timeZone: TZ })); }
+function formatDateAtlantic(date) {
+  return new Date(date).toLocaleDateString('en-CA', { timeZone: TZ, year:'numeric', month:'long', day:'numeric' });
+}
+function formatDateTimeAtlantic(date) {
+  return new Date(date).toLocaleString('en-CA', { timeZone: TZ, year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+
+const TIMEOUT_MS = 30 * 60 * 1000;
+const ACTIVITY = ['mousemove','keydown','click','touchstart'];
+
+let session = null, sessionExpiry = null, timerInterval = null;
+let allEmployees = [], currentEmployee = null;
+let searchTimeout = null;
+
+function el(id){return document.getElementById(id);}
+
+// ── ROLE / CAPABILITY SYSTEM ──────────────────────────────────────
+// Owner is a superuser that ALWAYS passes every check.
+// To scale back what an ADMIN can do, either set a capability to false in
+// ADMIN_CAPS, or restrict it to specific job titles in ADMIN_CAP_TITLES.
+var ADMIN_CAPS = {
+  addEmployee:     true,  // add new employees
+  resetPasswords:  true,  // reset other users' passwords
+  manageIncidents: true,  // add / edit incident reports
+  manageWarnings:  true,  // add / edit warning letters
+  viewDOB:         true,  // see employee dates of birth
+  editAnyProfile:  true   // edit any employee's full profile
+};
+// Restrict a capability to specific admin job titles. Example:
+//   resetPasswords: ['Administration Manager','IT Manager']
+// When a capability is listed here, an Admin only has it if their Job Title matches.
+var ADMIN_CAP_TITLES = {
+  // resetPasswords: ['Administration Manager']
+};
+function isOwnerRole(){ return !!session && session.role === 'Owner'; }
+function isAdminRole(){ return !!session && (session.role === 'Admin' || session.role === 'Owner'); }
+// Capability gate: Owner = always; Admin = per ADMIN_CAPS / ADMIN_CAP_TITLES; everyone else = no.
+function can(cap){
+  if(!session) return false;
+  if(session.role === 'Owner') return true;
+  if(session.role !== 'Admin') return false;
+  if(ADMIN_CAP_TITLES[cap]) return hasAnyJobTitle(session.jobTitle||'', ADMIN_CAP_TITLES[cap]);
+  return ADMIN_CAPS[cap] !== false;
+}
+function v(id){return el(id).value.trim();}
+
+function togglePw(){const i=el('inp-pw'),ic=el('pw-icon');i.type=i.type==='password'?'text':'password';ic.className=i.type==='password'?'ti ti-eye':'ti ti-eye-off';}
+
+async function api(path,options={}){
+  const authHeaders=session?{'x-user-role':session.role||'','x-user-id':session.employeeId||'','x-user-name':session.name||''}:{};
+  const res=await fetch(`${API}${path}`,{...options,headers:{'Content-Type':'application/json',...authHeaders,...(options.headers||{})}});
+  let data;
+  try{ data=await res.json(); }
+  catch(_){ throw new Error('Server returned a non-JSON response (HTTP '+res.status+') for '+path); }
+  if(!res.ok) throw new Error(data&&data.error?data.error:('Request failed (HTTP '+res.status+')'));
+  return data;
+}
+
+async function doLogin(){
+  const username=(v('inp-user')||'').trim().toLowerCase(),password=v('inp-pw');
+  if(!username||!password){showErr('Please enter your username and password.');return;}
+  const btn=el('login-btn');btn.disabled=true;btn.textContent='Signing in…';
+  try{
+    const data=await api('/api/login',{method:'POST',body:JSON.stringify({username,password})});
+    session={...data.user,token:data.token};
+    if(!session.username) session.username=username;
+    hideErr();el('inp-pw').value='';
+    startSession();
+  }catch(e){showErr(e.message||'Login failed.');btn.disabled=false;btn.textContent='Sign in';}
+}
+
+function startSession(){
+  el('login-page').classList.add('hidden');
+  el('app-shell').classList.remove('hidden');
+  const ini=session.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  el('top-name').textContent=session.name;
+  const rp=el('top-role');
+  rp.textContent=session.role;
+  rp.className='role-pip '+(session.role==='Owner'?'pip-owner':session.role==='Admin'?'pip-admin':session.role==='Manager'?'pip-manager':'pip-employee');
+  if(session.photo){el('top-avatar').innerHTML=`<img src="${session.photo}" alt=""/>`;}
+  else el('top-avatar').textContent=ini;
+  if(can('addEmployee')){el('add-emp-btn').style.display='';}
+  resetTimer();
+  ACTIVITY.forEach(e=>document.addEventListener(e,activityHandler,{passive:true}));
+  loadDirectory();
+  var ab=el('all-requests-btn');if(ab)ab.style.display='flex';
+  el('home-btn').style.display='';
+  if(can('resetPasswords')){var rpb=el('reset-pw-btn');if(rpb)rpb.style.display='flex';}
+  if(hasJobTitle(session.jobTitle||'','Administration Manager')){
+    var frb=el('file-requests-btn');if(frb)frb.style.display='flex';
+    loadFileRequestsCount();
+  }
+  if(session.role==='Manager'||isAdminRole()||session.name==='Terri Lee'){var pb=el('all-leave-btn');if(pb)pb.style.display='flex';loadPendingCount();}
+  showToast('Welcome, '+session.name.split(' ')[0]);
+}
+
+function activityHandler(){if(session)resetTimer();}
+
+function resetTimer(){
+  sessionExpiry=Date.now()+TIMEOUT_MS;
+  if(timerInterval)clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{if(Date.now()>sessionExpiry)expireSession();},10000);
+}
+
+function expireSession(){
+  clearInterval(timerInterval);ACTIVITY.forEach(e=>document.removeEventListener(e,activityHandler));
+  session=null;el('app-shell').classList.add('hidden');el('login-page').classList.remove('hidden');
+  el('inp-pw').value='';el('login-btn').disabled=false;el('login-btn').textContent='Sign in';
+  showErr('Session expired. Please sign in again.');
+}
+
+function doLogout(){
+  clearInterval(timerInterval);ACTIVITY.forEach(e=>document.removeEventListener(e,activityHandler));
+  session=null;el('app-shell').classList.add('hidden');el('login-page').classList.remove('hidden');
+  el('inp-user').value='';el('inp-pw').value='';hideErr();showToast('Signed out');
+}
+
+async function loadDirectory(){
+  const grid=el('emp-grid');
+  grid.innerHTML='<div class="loading"><i class="ti ti-loader" style="font-size:28px;display:block;margin-bottom:8px"></i>Loading...</div>';
+  try{
+    const data=await api('/api/employees');
+    allEmployees=data.employees;
+    populateDeptFilter();
+    renderGrid(allEmployees);
+    applyMobileQuickForms();
+  }catch(e){grid.innerHTML='<div class="empty"><i class="ti ti-alert-circle"></i>Could not load employees</div>';}
+}
+
+function populateDeptFilter(){
+  const sel=el('dept-filter');
+  const depts=[...new Set(allEmployees.map(e=>e.department).filter(Boolean))].sort();
+  const existing=new Set([...sel.options].map(o=>o.value));
+  depts.forEach(d=>{if(!existing.has(d)){const o=document.createElement('option');o.value=d;o.textContent=d;sel.appendChild(o);}});
+  // dept-list datalist removed (now using checkboxes)
+}
+
+function setInactiveOpen(open){
+  var g=el('inactive-grid'), c=el('inactive-chev');
+  if(!g||!c)return;
+  g.style.display=open?'block':'none';
+  c.style.transform=open?'rotate(90deg)':'';
+}
+function toggleInactive(){
+  var g=el('inactive-grid');
+  if(!g)return;
+  setInactiveOpen(g.style.display==='none'||g.style.display==='');
+}
+
+var depotOpen = {};
+function toggleDepot(headerEl){
+  var group = headerEl.closest('.depot-group');
+  if(!group) return;
+  var depot = group.getAttribute('data-depot');
+  var gridEl = group.querySelector('.depot-grid');
+  var chev = headerEl.querySelector('.depot-chev');
+  var willOpen = gridEl.style.display === 'none';
+  gridEl.style.display = willOpen ? '' : 'none';
+  if(chev) chev.style.transform = willOpen ? '' : 'rotate(-90deg)';
+  depotOpen[depot] = willOpen;
+}
+
+function renderGrid(employees){
+  const grid=el('emp-grid');
+  const activeEmps = employees.filter(e => e.active !== false);
+  const inactiveEmps = employees.filter(e => e.active === false);
+  const activeCount = activeEmps.length;
+  el('dir-heading').textContent=activeCount+' active employee'+(activeCount!==1?'s':'');
+  const mobile = window.innerWidth <= 480;
+
+  // Build shared card renderer
+  function empCard(emp){
+    const ini=(emp.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const photoHtml=emp.photo?`<img src="${emp.photo}" alt="${emp.name}"/>`:`<span>${ini}</span>`;
+    const canEdit=isAdminRole()||(session.role==='Manager')||(session.employeeId===emp.id);
+    const callLink=emp.cellPhone?`<a href="tel:${emp.cellPhone}" onclick="event.stopPropagation()" title="Call ${emp.cellPhone}" style="color:var(--navy);font-size:18px;display:inline-flex;align-items:center"><i class="ti ti-device-mobile"></i></a>`:'';
+    const emailLink=emp.email?`<a href="mailto:${emp.email}" onclick="event.stopPropagation()" title="Email ${emp.email}" style="color:var(--navy);font-size:18px;display:inline-flex;align-items:center"><i class="ti ti-mail"></i></a>`:'';
+    const canSeeEC=isAdminRole()||session.role==='Manager'||session.employeeId===emp.id;
+    const ecLink=(canSeeEC&&emp.emergencyName)?`<button onclick="event.stopPropagation();showEmergencyContact('${emp.id}')" title="Emergency contact" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:18px;display:inline-flex;align-items:center;padding:0"><i class="ti ti-heart"></i></button>`:'';
+    if(mobile) return`<div class="emp-list-item${emp.active===false?' inactive':''}" onclick="openProfile('${emp.id}')">
+      <div class="emp-photo">${photoHtml}</div>
+      <div class="emp-info">
+        <div class="emp-name">${emp.name}</div>
+        <div class="emp-title">${emp.jobTitle||'—'}</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px">
+          ${emp.department?`<span class="emp-dept">${emp.department}</span>`:''}
+          <span class="${emp.active!==false?'status-active':'status-inactive'}">${emp.active!==false?'Active':'Inactive'}</span>
+        </div>
+        ${(callLink||emailLink||ecLink)?`<div style="display:flex;gap:14px;margin-top:6px">${callLink}${emailLink}${ecLink}</div>`:''}
+      </div>
+      ${canEdit&&can('editAnyProfile')?`<button class="btn-sm edit-btn" style="padding:4px 8px;font-size:11px;flex-shrink:0;margin-left:auto" onclick="event.stopPropagation();openEditForId('${emp.id}')"><i class="ti ti-edit" style="font-size:12px"></i></button>`:''}
+    </div>`;
+    return`<div class="emp-card${emp.active===false?' inactive':''}" onclick="openProfile('${emp.id}')">
+      ${canEdit&&can('editAnyProfile')?`<button class="btn-sm edit-btn" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();openEditForId('${emp.id}')"><i class="ti ti-edit" style="font-size:12px"></i></button>`:''}
+      <div class="emp-photo">${photoHtml}</div>
+      <div class="emp-info">
+        <div class="emp-name">${emp.name}</div>
+        <div class="emp-title">${emp.jobTitle||'—'}</div>
+        ${emp.department?`<div class="emp-dept">${emp.department}</div>`:''}
+        <div style="margin-top:4px"><span class="${emp.active!==false?'status-active':'status-inactive'}">${emp.active!==false?'Active':'Inactive'}</span></div>
+        ${(callLink||emailLink||ecLink)?`<div class="emp-links" style="display:flex;gap:12px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${callLink}${emailLink}${ecLink}</div>`:''}
+      </div>
+    </div>`;
+  }
+
+  // Group ACTIVE employees by depot / location
+  const groups={};
+  activeEmps.forEach(emp=>{
+    const key=emp.depot||'No Location Assigned';
+    if(!groups[key])groups[key]=[];
+    groups[key].push(emp);
+  });
+  const sortedKeys=Object.keys(groups).sort((a,b)=>{
+    if(a==='No Location Assigned')return 1;
+    if(b==='No Location Assigned')return -1;
+    return a.localeCompare(b);
+  });
+
+  // Collapsible depots — open the user's own depot by default; open all while searching/filtering
+  const searchActive = !!((v('search-input')||'').trim()) || !!v('dept-filter') || !!v('status-filter');
+  const me = allEmployees.find(e => e.id === session.employeeId);
+  const userDepotKey = me ? (me.depot || 'No Location Assigned') : null;
+  function depotIsOpen(depot){
+    if(searchActive) return true;
+    if(depot in depotOpen) return depotOpen[depot];
+    return userDepotKey ? (depot === userDepotKey) : true;
+  }
+
+  grid.innerHTML = activeEmps.length ? sortedKeys.map(depot=>{
+    const emps=groups[depot];
+    const open=depotIsOpen(depot);
+    const depotAttr=String(depot).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    return`<div class="depot-group" data-depot="${depotAttr}">
+      <div class="depot-group-header" onclick="toggleDepot(this)" style="cursor:pointer;user-select:none">
+        <span class="depot-group-name"><i class="ti ti-chevron-down depot-chev" style="font-size:13px;transition:transform 0.2s${open?'':';transform:rotate(-90deg)'}"></i><i class="ti ti-map-pin" style="font-size:13px"></i>${depot}</span>
+        <span class="depot-count">${emps.length}</span>
+      </div>
+      <div class="depot-grid"${open?'':' style="display:none"'}>${emps.map(empCard).join('')}</div>
+    </div>`;
+  }).join('') : (inactiveEmps.length ? '' : '<div class="empty"><i class="ti ti-users"></i>No employees found</div>');
+
+  // Inactive employees -> collapsed section at the bottom
+  const inactiveSection=el('inactive-section');
+  if(inactiveEmps.length){
+    inactiveSection.style.display='';
+    el('inactive-count').textContent=inactiveEmps.length;
+    el('inactive-grid').innerHTML='<div class="depot-grid">'+inactiveEmps.map(empCard).join('')+'</div>';
+    // auto-expand only when there are no active results to show (e.g. filtered to Inactive)
+    if(activeEmps.length===0) setInactiveOpen(true);
+  } else {
+    inactiveSection.style.display='none';
+    el('inactive-grid').innerHTML='';
+  }
+}
+
+function applyMobileQuickForms(){
+  var qfr=el('qfr');
+  if(!qfr)return;
+  var mobile=window.innerWidth<=480;
+  qfr.style.flexWrap=mobile?'nowrap':'wrap';
+  qfr.style.overflowX=mobile?'auto':'';
+  qfr.style.webkitOverflowScrolling=mobile?'touch':'';
+  qfr.style.paddingBottom=mobile?'4px':'';
+  Array.from(qfr.children).forEach(function(btn){
+    if(btn.style.display==='none')return;
+    var textDiv=btn.querySelector('div+div');
+    if(textDiv)textDiv.style.display=mobile?'none':'';
+    btn.style.padding=mobile?'10px':'10px 16px';
+    btn.style.gap=mobile?'0':'10px';
+    btn.style.flexShrink=mobile?'0':'';
+  });
+}
+var _rszTO;
+window.addEventListener('resize',function(){
+  clearTimeout(_rszTO);
+  _rszTO=setTimeout(function(){
+    if(allEmployees&&allEmployees.length)renderGrid(allEmployees);
+    applyMobileQuickForms();
+  },200);
+});
+
+function debounceSearch(){clearTimeout(searchTimeout);searchTimeout=setTimeout(doSearch,300);}
+
+function doSearch(){
+  const q=v('search-input').toLowerCase();
+  const dept=v('dept-filter');
+  const statusF=v('status-filter');
+  let filtered=allEmployees;
+  if(q) filtered=filtered.filter(e=>(e.name+e.jobTitle+e.department).toLowerCase().includes(q));
+  if(dept) filtered=filtered.filter(e=>e.department===dept);
+  if(statusF==='active') filtered=filtered.filter(e=>e.active!==false);
+  if(statusF==='inactive') filtered=filtered.filter(e=>e.active===false);
+  renderGrid(filtered);
+}
+
+function openProfile(id){
+  const emp=allEmployees.find(e=>e.id===id);
+  if(!emp) return;
+  currentEmployee=emp;
+  const ini=(emp.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  el('mp-photo').innerHTML=emp.photo?`<img src="${emp.photo}" alt=""/>`:`<span style="font-family:'DM Serif Display',serif;color:#fff">${ini}</span>`;
+  el('mp-name').textContent=emp.name;
+  el('mp-subtitle').textContent=[emp.jobTitle,emp.department].filter(Boolean).join(' · ')||'—';
+  // Status badge in header
+  let statusBadge=el('mp-status-badge');
+  if(!statusBadge){statusBadge=document.createElement('span');statusBadge.id='mp-status-badge';statusBadge.style.marginLeft='8px';el('mp-name').parentElement.appendChild(statusBadge);}
+  statusBadge.className=emp.active!==false?'status-active':'status-inactive';
+  statusBadge.textContent=emp.active!==false?'Active':'Inactive';
+  el('mp-email').innerHTML=emp.email?`<a href="mailto:${emp.email}">${emp.email}</a>`:'—';
+  el('mp-cell').innerHTML=emp.cellPhone?`<a href="tel:${emp.cellPhone}">${emp.cellPhone}</a>`:'—';
+  el('mp-office-phone').innerHTML=emp.officePhone?`<a href="tel:${emp.officePhone}">${emp.officePhone}</a>`:'—';
+  el('mp-home-phone').innerHTML=emp.homePhone?`<a href="tel:${emp.homePhone}">${emp.homePhone}</a>`:'—';
+  el('mp-title').textContent=emp.jobTitle||'—';
+  el('mp-dept').textContent=emp.department||'—';
+  el('mp-manager').textContent=emp.manager||'—';
+  el('mp-depot').textContent=emp.depot||'—';
+  el('mp-emp-status').textContent=emp.employmentStatus||'—';
+  el('mp-start').textContent=emp.startDate||'—';
+  el('mp-end').textContent=emp.endDate||'—';
+  if(can('viewDOB')){el('mp-dob-row').style.display='';el('mp-dob').textContent=emp.dob||'—';}else{el('mp-dob-row').style.display='none';}
+  // Emergency contact — admin/manager only
+  const showEC=isAdminRole()||session.role==='Manager'||session.employeeId===emp.id;
+  el('mp-emergency-section').style.display=showEC?'':'none';
+  if(showEC){el('mp-ec-name').textContent=emp.emergencyName||'—';el('mp-ec-phone').textContent=emp.emergencyPhone||'—';el('mp-ec-rel').textContent=emp.emergencyRelation||'—';}
+  // Edit button — Admin: all, Manager: own employees, Employee: own profile only
+  const isOwnProfile = session.employeeId === emp.id;
+  const isManagerOfEmp = session.role === 'Manager' && emp.manager === session.name;
+  const canEdit = can('editAnyProfile') || isManagerOfEmp || (isOwnProfile && ['Manager','Supervisor','Employee'].includes(session.role));
+  el('mp-edit-btn').style.display = canEdit ? '' : 'none';
+  el('own-photo-control').style.display = isOwnProfile ? '' : 'none';
+  if(isOwnProfile){ const ops=el('own-photo-status'); if(ops){ ops.textContent=''; ops.style.color='var(--muted)'; } }
+  el('mp-incident-btn').style.display=can('manageIncidents')?'':'none';
+  el('mp-warning-btn').style.display=can('manageWarnings')?'':'none';
+
+  // Abstract, training, warnings — admin/manager only
+  if(isAdminRole()||session.role==='Manager'){
+    el('mp-abstract-section').style.display='';
+    el('mp-abstract-date').textContent=emp.abstractDate||'—';
+    // Load abstract files
+    loadAbstractFiles(emp.id);
+    el('mp-training-section').style.display='';
+    loadTraining(emp);
+    el('mp-warnings-section').style.display='';
+    loadWarnings(emp.id);
+  } else {
+    el('mp-abstract-section').style.display='none';
+    el('mp-training-section').style.display='none';
+    el('mp-warnings-section').style.display='none';
+  }
+
+  // License section — admin only
+  if (isAdminRole()||session.role==='Manager') {
+    el('mp-license-section').style.display='';
+    el('mp-lic-num').textContent=emp.licenseNumber||'—';
+    el('mp-lic-class').textContent=emp.licenseClass||'—';
+    el('mp-lic-expiry').textContent=emp.licenseExpiry||'—';
+    el('mp-lic-province').textContent=emp.licenseProvince||'—';
+    el('mp-lic-restrictions').textContent=emp.licenseRestrictions||'None';
+    el('mp-lic-endorsements').textContent=emp.licenseEndorsements||'None';
+    if(emp.licensePhotos && emp.licensePhotos.length > 0){
+      el('mp-lic-photo-row').style.display='';
+      el('mp-lic-photos-list').innerHTML = emp.licensePhotos.map((f,i) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f5f4f0">
+          <i class="ti ti-id" style="font-size:20px;color:var(--navy);flex-shrink:0"></i>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.filename || 'License photo ' + (i+1)}</div>
+          </div>
+          <a href="${f.url}" target="_blank" style="flex-shrink:0" class="btn-sm primary" onclick="event.stopPropagation()">
+            <i class="ti ti-download" style="font-size:13px"></i> View
+          </a>
+        </div>
+      `).join('') + '<style>#mp-lic-photos-list > div:last-child{border-bottom:none}</style>';
+    } else {
+      el('mp-lic-photo-row').style.display='none';
+    }
+    const ls=licenseStatus(emp.licenseExpiry);
+    el('mp-license-status').innerHTML=ls?`<span class="${ls.cls}">${ls.label}</span>`:'';
+  } else { el('mp-license-section').style.display='none'; }
+
+  // Incidents section — admin and own employee
+  const canSeeIncidents=isAdminRole()||session.role==='Manager'||session.employeeId===emp.id;
+  if(canSeeIncidents){
+    el('mp-incidents-section').style.display='';
+    loadIncidents(emp.id);
+  } else { el('mp-incidents-section').style.display='none'; }
+
+  markMissingFields();
+  el('modal-view').classList.remove('hidden');
+  el('profile-modal').classList.remove('hidden');
+}
+
+function markMissingFields(){
+  // Clear any marks from a previously viewed profile, then flag visible
+  // read-only rows whose value is empty (shown as the "—" placeholder).
+  document.querySelectorAll('#modal-view .info-row.missing').forEach(function(r){r.classList.remove('missing');});
+  document.querySelectorAll('#modal-view .info-val').forEach(function(v){
+    var row=v.closest('.info-row');
+    if(!row) return;
+    var section=row.closest('.info-section');
+    if(section && section.style.display==='none') return; // section hidden for this viewer
+    if(row.style.display==='none') return;                // row hidden for this viewer
+    var txt=(v.textContent||'').trim();
+    if(txt==='' || txt==='—'){ row.classList.add('missing'); }
+  });
+}
+
+function openEditForId(id){
+  const emp=allEmployees.find(e=>e.id===id);
+  if(emp){currentEmployee=emp;openProfile(id);openEditModal();}
+}
+
+function openEditModal(){
+  const emp=currentEmployee;
+  if(!emp) return;
+
+  const isAdmin=isAdminRole();
+  const isManager=session.role==='Manager';
+  const isOwnProfile=session.employeeId===emp.id;
+  const isManagerOfEmp=isManager&&emp.manager===session.name;
+  const basicOnly=!isAdmin&&!isManagerOfEmp&&isOwnProfile;
+
+  // Populate fields directly in panel
+  el('edit-id').value=emp.id;
+  el('edit-name').value=emp.name||'';
+  // Set job title checkboxes
+  var titleVals=titleList(emp.jobTitle);
+  document.querySelectorAll('#edit-title-checks input[type=checkbox]').forEach(function(cb){
+    cb.checked=titleVals.indexOf(cb.value)!==-1;
+  });
+  const depts=Array.isArray(emp.department)?emp.department:(emp.department||'').split(',').map(d=>d.trim()).filter(Boolean);
+  document.querySelectorAll('#edit-dept-checks input[type=checkbox]').forEach(cb=>{cb.checked=depts.includes(cb.value);});
+  el('edit-start').value=emp.startDate||'';
+  el('edit-end').value=emp.endDate||'';
+  el('edit-dob').value=emp.dob||'';
+  el('edit-email').value=emp.email||'';
+  el('edit-cell').value=emp.cellPhone||'';
+  el('edit-office-phone').value=emp.officePhone||'';
+  el('edit-home-phone').value=emp.homePhone||'';
+  el('edit-ec-name').value=emp.emergencyName||'';
+  el('edit-ec-phone').value=emp.emergencyPhone||'';
+  el('edit-ec-rel').value=emp.emergencyRelation||'';
+  el('edit-notes').value=emp.notes||'';
+  el('edit-active').value=emp.active!==false?'true':'false';
+  el('edit-depot').value=emp.depot||'';
+  el('edit-emp-status').value=emp.employmentStatus||'';
+  el('edit-training-id').value=emp.trainingEmployeeId||'';
+  if(isAdmin){
+    el('edit-lic-num').value=emp.licenseNumber||'';
+    el('edit-lic-class').value=emp.licenseClass||'';
+    el('edit-lic-expiry').value=emp.licenseExpiry||'';
+    el('edit-lic-province').value=emp.licenseProvince||'';
+    el('edit-lic-restrictions').value=emp.licenseRestrictions||'';
+    el('edit-lic-endorsements').value=emp.licenseEndorsements||'';
+    el('edit-abstract-date').value=emp.abstractDate||'';
+  }
+  const ini=(emp.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  el('edit-photo-preview').innerHTML=emp.photo?`<img src="${emp.photo}" alt=""/>`:`<span style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:#fff">${ini}</span>`;
+
+  // Show/hide sections
+  document.querySelectorAll('.edit-basic-hidden').forEach(e=>e.style.display=basicOnly?'none':'');
+  document.querySelectorAll('.edit-admin-only').forEach(e=>e.style.display=isAdmin?'':'none');
+  el('dob-field').style.display=isAdmin?'':'none';
+  el('status-field').style.display=isAdmin?'':'none';
+  el('notes-field').style.display=isAdmin?'':'none';
+  el('license-edit-section').style.display=isAdmin?'':'none';
+  el('panel-delete-btn').style.display=isAdmin?'':'none';
+  el('edit-panel-title').textContent='Edit — '+(emp.name||'Employee');
+  el('fob-section').style.display='none';
+
+  loadManagerDropdown().then(()=>{el('edit-manager').value=emp.manager||'';});
+  loadJobTitleOptions();
+
+  // Open panel
+  el('edit-panel-overlay').classList.add('open');
+  el('edit-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function openAddModal(){
+  currentEmployee={id:null,name:'',jobTitle:'',department:'',phone:'',email:'',emergencyName:'',emergencyPhone:'',emergencyRelation:'',startDate:'',notes:'',photo:''};
+  el('edit-id').value='';
+  ['edit-name','edit-email','edit-cell','edit-office-phone','edit-home-phone','edit-ec-name','edit-ec-phone','edit-ec-rel','edit-notes'].forEach(id=>el(id).value='');
+  el('edit-emp-status').value='';
+  document.querySelectorAll('#edit-dept-checks input[type=checkbox]').forEach(cb=>cb.checked=false);
+  el('edit-active').value='true';
+  el('edit-start').value='';
+  el('edit-dob').value='';
+  el('edit-door-fob').checked=false;
+  el('edit-driver-fob').checked=false;
+  document.querySelectorAll('#edit-title-checks input[type=checkbox]').forEach(function(cb){cb.checked=false;cb.closest('label').style.background='#fff';cb.closest('label').style.borderColor='var(--border)';});
+  el('door-fob-label').style.borderColor='var(--border)';
+  el('driver-fob-label').style.borderColor='var(--border)';
+  el('edit-photo-preview').innerHTML='<span style="font-family:\'DM Serif Display\',serif;font-size:1.2rem;color:#fff">+</span>';
+  el('mp-name').textContent='New employee';el('mp-subtitle').textContent='Fill in the details below';
+  el('mp-photo').innerHTML='<span style="font-family:\'DM Serif Display\',serif;color:#fff">+</span>';
+  el('panel-delete-btn').style.display='none';
+  el('notes-field').style.display='';
+  el('edit-panel-title').textContent='Add employee';
+  el('fob-section').style.display='';
+  el('panel-delete-btn').style.display='none';
+  loadManagerDropdown();
+  loadJobTitleOptions();
+  el('edit-panel-overlay').classList.add('open');
+  el('edit-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+
+
+function cancelEdit(){
+  el('edit-panel-overlay').classList.remove('open');
+  el('edit-panel').classList.remove('open');
+  document.body.style.overflow = '';
+  pendingPhotoUrl = null;
+  pendingPhotoFileName = null;
+  el('photo-upload-status').textContent = 'JPG, PNG — max 5MB';
+  el('photo-upload-status').style.color = '';
+  el('photo-file-input').value = '';
+}
+
+async function saveEmployee(){
+  const id=v('edit-id');
+  const payload={
+    name:v('edit-name'),jobTitle:[...document.querySelectorAll('#edit-title-checks input:checked')].map(function(cb){return cb.value;}).join(', '),department:[...document.querySelectorAll('#edit-dept-checks input[type=checkbox]:checked')].map(cb=>cb.value).join(', '),
+    startDate:el('edit-start').value,endDate:el('edit-end').value,dob:el('edit-dob').value,
+    email:v('edit-email'),cellPhone:v('edit-cell'),officePhone:v('edit-office-phone'),homePhone:v('edit-home-phone'),
+    emergencyName:v('edit-ec-name'),emergencyPhone:v('edit-ec-phone'),emergencyRelation:v('edit-ec-rel'),
+    notes:v('edit-notes'),active:el('edit-active').value==='true',
+    licenseNumber:v('edit-lic-num'),licenseClass:v('edit-lic-class'),
+    licenseExpiry:el('edit-lic-expiry').value,licenseProvince:v('edit-lic-province'),
+    licenseRestrictions:v('edit-lic-restrictions'),licenseEndorsements:v('edit-lic-endorsements'),
+    abstractDate:el('edit-abstract-date').value,manager:el('edit-manager').value,
+    depot:el('edit-depot').value,employmentStatus:el('edit-emp-status').value,
+    trainingEmployeeId:v('edit-training-id'),
+    photoUrl: pendingPhotoUrl||undefined,
+    photoFileName: pendingPhotoFileName||undefined
+  };
+  if(!payload.name){showToast('Name is required',true);return;}
+  try{
+    let updated;
+    if(id){updated=await api('/api/employees',{method:'PATCH',body:JSON.stringify({id,...payload})});}
+    else{updated=await api('/api/employees',{method:'POST',body:JSON.stringify(payload)});}
+    // Update local array
+    const idx=allEmployees.findIndex(e=>e.id===updated.id);
+    if(idx>-1)allEmployees[idx]=updated;
+    else allEmployees.push(updated);
+    currentEmployee=updated;
+    populateDeptFilter();
+    doSearch();
+    cancelEdit();
+    showToast('Profile saved ✓');
+    openProfile(updated.id);
+    if(!id){
+      if(el('edit-door-fob').checked) sendFobEmail('door', updated);
+      if(el('edit-driver-fob').checked) sendFobEmail('driver', updated);
+    }
+  }catch(e){showToast(e.message||'Save failed',true);}
+}
+
+async function deleteEmployee(){
+  const id=v('edit-id');
+  if(!id||!confirm('Permanently delete this employee? This cannot be undone.')) return;
+  try{
+    await api('/api/employees',{method:'DELETE',body:JSON.stringify({id})});
+    allEmployees=allEmployees.filter(e=>e.id!==id);
+    doSearch();
+    closeProfileModal();
+    showToast('Employee deleted');
+  }catch(e){showToast(e.message||'Delete failed',true);}
+}
+
+// ── LICENSE STATUS ──
+function licenseStatus(expiry) {
+  if (!expiry) return null;
+  const exp = new Date(expiry);
+  const days = Math.ceil((exp - new Date()) / (1000*60*60*24));
+  if (days < 0) return { label: 'Expired', cls: 'license-expired' };
+  if (days <= 60) return { label: `Expires in ${days}d`, cls: 'license-warn' };
+  return { label: `Valid to ${exp.toLocaleDateString()}`, cls: 'license-ok' };
+}
+
+function severityBadge(sev) {
+  if (!sev) return '';
+  const cls = {Low:'sev-low',Medium:'sev-medium',High:'sev-high',Critical:'sev-critical'}[sev]||'sev-low';
+  return `<span class="${cls}">${sev}</span>`;
+}
+
+// ── INCIDENTS ──
+let currentIncidents = [], editingIncident = null;
+
+async function loadIncidents(empId) {
+  try {
+    const data = await api(`/api/incidents?employeeId=${empId}`);
+    currentIncidents = data.incidents;
+    renderIncidents();
+  } catch(e) {
+    el('mp-incidents-list').innerHTML = '<div style="font-size:13px;color:var(--muted)">Could not load incidents</div>';
+  }
+}
+
+function toggleAccordion(id){
+  var d=el(id+'-detail'),c=el(id+'-chev');
+  if(!d)return;
+  var open=d.style.display!=='none';
+  d.style.display=open?'none':'';
+  if(c)c.style.transform=open?'':'rotate(180deg)';
+}
+
+function renderIncidents() {
+  const listEl = el('mp-incidents-list');
+  if (!currentIncidents || !currentIncidents.length) {
+    listEl.innerHTML = '<div style="font-size:13px;color:var(--muted)">No incidents recorded</div>';
+    return;
+  }
+  var LABEL = 'font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px';
+  listEl.innerHTML = currentIncidents.map(function(i,idx,arr) {
+    var rid = 'inc-' + i.id;
+    var followBadge = i.followUpRequired ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;background:#EEF0F8;color:var(--navy)">Follow-up</span>' : '';
+    var fileLink = i.fileUrl ? '<a href="' + i.fileUrl + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--navy);font-weight:500;text-decoration:none;background:#EEF0F8;padding:4px 10px;border-radius:6px;margin-right:6px"><i class="ti ti-paperclip" style="font-size:12px"></i>' + (i.fileName||'View document') + '</a>' : '';
+    var editBtn = can('manageIncidents') ? '<button class="btn-sm" style="padding:3px 10px;font-size:11px" onclick="event.stopPropagation();openEditIncident(\'' + i.id + '\')"><i class="ti ti-edit" style="font-size:11px"></i> Edit</button>' : '';
+    var border = idx < arr.length - 1 ? 'border-bottom:1px solid var(--border)' : '';
+    var preview = (i.location ? i.location + ' \xb7 ' : '') + (i.description||'').slice(0,60) + ((i.description||'').length>60?'\u2026':'');
+    var descBlock = i.description ? '<div style="margin-bottom:8px"><div style="' + LABEL + '">Description</div><div>' + i.description + '</div></div>' : '';
+    var actionBlock = i.actionTaken ? '<div style="margin-bottom:8px"><div style="' + LABEL + '">Action taken</div><div>' + i.actionTaken + '</div></div>' : '';
+    var followBlock = (i.followUpRequired && i.followUpNotes) ? '<div style="margin-bottom:8px"><div style="' + LABEL + '">Follow-up notes</div><div>' + i.followUpNotes + '</div></div>' : '';
+    var filedSpan = i.filedBy ? '<span style="font-size:11px;color:var(--muted)">Recorded by ' + i.filedBy + '</span>' : '';
+    return '<div style="' + border + '">'
+      + '<div style="display:flex;align-items:flex-start;gap:8px;padding:10px 0;cursor:pointer;user-select:none" onclick="toggleAccordion(\'' + rid + '\')">'
+      +   '<div style="flex:1;min-width:0">'
+      +     '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">'
+      +       '<span style="font-size:13px;font-weight:600">' + i.date + '</span>'
+      +       '<span style="font-size:12px;color:var(--muted)">' + i.type + '</span>'
+      +       severityBadge(i.severity) + followBadge
+      +     '</div>'
+      +     '<div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + preview + '</div>'
+      +   '</div>'
+      +   '<i class="ti ti-chevron-down" id="' + rid + '-chev" style="color:var(--muted);flex-shrink:0;margin-top:3px;transition:transform 0.2s"></i>'
+      + '</div>'
+      + '<div id="' + rid + '-detail" style="display:none;padding-bottom:12px;font-size:13px">'
+      +   descBlock + actionBlock + followBlock
+      +   '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:6px">' + fileLink + editBtn + filedSpan + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function openNewIncident() {
+  editingIncident = null;
+  el('inc-id').value = '';
+  el('inc-emp-id').value = currentEmployee.id;
+  el('inc-modal-title').textContent = 'New Incident Report';
+  el('inc-modal-subtitle').textContent = currentEmployee.name;
+  el('inc-date').value = new Date().toISOString().split('T')[0];
+  el('inc-type').value = '';
+  el('inc-severity').value = '';
+  el('inc-location').value = '';
+  el('inc-description').value = '';
+  el('inc-action').value = '';
+  el('inc-followup').checked = false;
+  el('inc-followup-notes-wrap').style.display = 'none';
+  el('inc-followup-notes').value = '';
+  el('inc-delete-btn').style.display = 'none';
+  resetIncidentAttachment();
+  el('incident-modal').classList.remove('hidden');
+}
+
+function openEditIncident(id) {
+  const inc = currentIncidents.find(i => i.id === id);
+  if (!inc) return;
+  editingIncident = inc;
+  el('inc-id').value = inc.id;
+  el('inc-emp-id').value = inc.employeeId;
+  el('inc-modal-title').textContent = 'Edit Incident Report';
+  el('inc-modal-subtitle').textContent = inc.employeeName;
+  el('inc-date').value = inc.date;
+  el('inc-type').value = inc.type;
+  el('inc-severity').value = inc.severity;
+  el('inc-location').value = inc.location;
+  el('inc-description').value = inc.description;
+  el('inc-action').value = inc.actionTaken;
+  el('inc-followup').checked = inc.followUpRequired;
+  el('inc-followup-notes-wrap').style.display = inc.followUpRequired ? '' : 'none';
+  el('inc-followup-notes').value = inc.followUpNotes;
+  el('inc-delete-btn').style.display = '';
+  el('incident-modal').classList.remove('hidden');
+}
+
+async function saveIncident() {
+  const empId = el('inc-emp-id').value;
+  const date = el('inc-date').value;
+  const type = el('inc-type').value;
+  const description = el('inc-description').value.trim();
+  if (!empId || !date || !type || !description) { showToast('Date, type and description are required', true); return; }
+  const payload = {
+    employeeId: empId,
+    employeeName: currentEmployee?.name || '',
+    date, type, description,
+    severity: el('inc-severity').value,
+    location: el('inc-location').value.trim(),
+    actionTaken: el('inc-action').value.trim(),
+    followUpRequired: el('inc-followup').checked,
+    followUpNotes: el('inc-followup-notes').value.trim(),
+    filedBy: session.name,
+    fileUrl: pendingIncidentAttachment?.url||undefined,
+    fileName: pendingIncidentAttachment?.name||undefined
+  };
+  try {
+    if (editingIncident) {
+      const updated = await api('/api/incidents', { method: 'PATCH', body: JSON.stringify({ id: editingIncident.id, ...payload }) });
+      const idx = currentIncidents.findIndex(i => i.id === editingIncident.id);
+      if (idx > -1) currentIncidents[idx] = updated;
+    } else {
+      const created = await api('/api/incidents', { method: 'POST', body: JSON.stringify(payload) });
+      currentIncidents.unshift(created);
+    }
+    renderIncidents();
+    closeIncidentModal();
+    showToast('Incident report saved ✓');
+  } catch(e) { showToast(e.message || 'Save failed', true); }
+}
+
+async function deleteIncident() {
+  if (!editingIncident || !confirm('Delete this incident report? This cannot be undone.')) return;
+  try {
+    await api('/api/incidents', { method: 'DELETE', body: JSON.stringify({ id: editingIncident.id }) });
+    currentIncidents = currentIncidents.filter(i => i.id !== editingIncident.id);
+    renderIncidents();
+    closeIncidentModal();
+    showToast('Incident deleted');
+  } catch(e) { showToast(e.message || 'Delete failed', true); }
+}
+
+function closeIncidentModal(e) {
+  if (e && e.target !== el('incident-modal')) return;
+  el('incident-modal').classList.add('hidden');
+  editingIncident = null;
+  resetIncidentAttachment();
+}
+
+// Toggle follow-up notes
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'inc-followup') {
+    el('inc-followup-notes-wrap').style.display = e.target.checked ? '' : 'none';
+  }
+});
+
+// ── WARNINGS ──
+let currentWarnings = [], editingWarning = null;
+
+async function loadWarnings(empId) {
+  try {
+    const data = await api(`/api/warnings?employeeId=${empId}`);
+    currentWarnings = data.warnings;
+    renderWarnings();
+  } catch(e) {
+    console.error('loadWarnings error:', e);
+    el('mp-warnings-list').innerHTML = '<div style="font-size:13px;color:var(--muted)">Could not load warnings — ' + (e&&e.message?e.message:'unknown error') + '</div>';
+  }
+}
+
+function renderWarnings() {
+  const listEl = el('mp-warnings-list');
+  if (!currentWarnings || !currentWarnings.length) { listEl.innerHTML = '<div style="font-size:13px;color:var(--muted)">No warning letters on record</div>'; return; }
+  const sevCls = { Verbal:'sev-low', Written:'sev-medium', Final:'sev-high', Critical:'sev-critical' };
+  const LABEL = 'font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px';
+  listEl.innerHTML = currentWarnings.map(function(w,idx,arr) {
+    var rid = 'warn-' + w.id;
+    var sevBadge = w.severity ? '<span class="' + (sevCls[w.severity]||'sev-low') + '" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px">' + w.severity + '</span>' : '';
+    var ackBadge = w.acknowledged ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;background:#E1F5EE;color:#085041">Acknowledged</span>' : '';
+    var fileLink = w.fileUrl ? '<a href="' + w.fileUrl + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--navy);font-weight:500;text-decoration:none;background:#EEF0F8;padding:4px 10px;border-radius:6px;margin-right:6px"><i class="ti ti-paperclip" style="font-size:12px"></i>' + (w.fileName||'View document') + '</a>' : '';
+    var editBtn = can('manageWarnings') ? '<button class="btn-sm" style="padding:3px 10px;font-size:11px" onclick="event.stopPropagation();openEditWarning(\'' + w.id + '\')"><i class="ti ti-edit" style="font-size:11px"></i> Edit</button>' : '';
+    var border = idx < arr.length - 1 ? 'border-bottom:1px solid var(--border)' : '';
+    var descBlock = w.description ? '<div style="margin-bottom:8px"><div style="' + LABEL + '">Description</div><div>' + w.description + '</div></div>' : '';
+    var ackNote = (w.acknowledged && w.acknowledgedDate) ? ' &middot; Acknowledged ' + w.acknowledgedDate : '';
+    var issuedBlock = w.issuedBy ? '<div style="margin-bottom:6px;font-size:12px;color:var(--muted)">Issued by <strong>' + w.issuedBy + '</strong>' + ackNote + '</div>' : '';
+    return '<div style="' + border + '">'
+      + '<div style="display:flex;align-items:flex-start;gap:8px;padding:10px 0;cursor:pointer;user-select:none" onclick="toggleAccordion(\'' + rid + '\')">'
+      +   '<div style="flex:1;min-width:0">'
+      +     '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">'
+      +       '<span style="font-size:13px;font-weight:600">' + w.date + '</span>'
+      +       sevBadge + ackBadge
+      +     '</div>'
+      +     '<div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + w.subject + '</div>'
+      +   '</div>'
+      +   '<i class="ti ti-chevron-down" id="' + rid + '-chev" style="color:var(--muted);flex-shrink:0;margin-top:3px;transition:transform 0.2s"></i>'
+      + '</div>'
+      + '<div id="' + rid + '-detail" style="display:none;padding-bottom:12px;font-size:13px">'
+      +   descBlock + issuedBlock
+      +   '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:6px">' + fileLink + editBtn + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function openNewWarning() {
+  editingWarning = null;
+  el('warn-id').value=''; el('warn-emp-id').value=currentEmployee.id;
+  el('warn-modal-title').textContent='New Warning Letter';
+  el('warn-modal-subtitle').textContent=currentEmployee.name;
+  el('warn-date').value=new Date().toISOString().split('T')[0];
+  el('warn-severity').value=''; el('warn-subject').value='';
+  el('warn-description').value=''; el('warn-issued-by').value=session.name;
+  el('warn-acknowledged').checked=false; el('warn-ack-date-wrap').style.display='none';
+  el('warn-ack-date').value=''; el('warn-delete-btn').style.display='none';
+  resetWarningAttachment();
+  el('warning-modal').classList.remove('hidden');
+}
+
+function openEditWarning(id) {
+  const w = currentWarnings.find(x=>x.id===id); if(!w) return;
+  editingWarning=w;
+  el('warn-id').value=w.id; el('warn-emp-id').value=w.employeeId;
+  el('warn-modal-title').textContent='Edit Warning Letter';
+  el('warn-modal-subtitle').textContent=w.employeeName;
+  el('warn-date').value=w.date; el('warn-severity').value=w.severity;
+  el('warn-subject').value=w.subject; el('warn-description').value=w.description;
+  el('warn-issued-by').value=w.issuedBy;
+  el('warn-acknowledged').checked=w.acknowledged;
+  el('warn-ack-date-wrap').style.display=w.acknowledged?'':'none';
+  el('warn-ack-date').value=w.acknowledgedDate||'';
+  el('warn-delete-btn').style.display='';
+  el('warning-modal').classList.remove('hidden');
+}
+
+function toggleAckDate(){el('warn-ack-date-wrap').style.display=el('warn-acknowledged').checked?'':'none';}
+
+async function saveWarning() {
+  const empId=el('warn-emp-id').value, date=el('warn-date').value, subject=v('warn-subject');
+  if(!empId||!date||!subject){showToast('Date and subject are required',true);return;}
+  const payload={employeeId:empId,employeeName:currentEmployee?.name||'',date,subject,
+    description:el('warn-description').value.trim(),severity:el('warn-severity').value,
+    issuedBy:v('warn-issued-by'),acknowledged:el('warn-acknowledged').checked,
+    acknowledgedDate:el('warn-ack-date').value||'',
+    fileUrl:pendingWarningAttachment?.url||undefined,
+    fileName:pendingWarningAttachment?.name||undefined};
+  try {
+    if(editingWarning){
+      const updated=await api('/api/warnings',{method:'PATCH',body:JSON.stringify({id:editingWarning.id,...payload})});
+      const idx=currentWarnings.findIndex(w=>w.id===editingWarning.id);
+      if(idx>-1) currentWarnings[idx]=updated;
+    } else {
+      const created=await api('/api/warnings',{method:'POST',body:JSON.stringify(payload)});
+      currentWarnings.unshift(created);
+    }
+    renderWarnings(); closeWarningModal(); showToast('Warning letter saved ✓');
+  } catch(e){showToast(e.message||'Save failed',true);}
+}
+
+async function deleteWarning(){
+  if(!editingWarning||!confirm('Delete this warning letter? This cannot be undone.')) return;
+  try {
+    await api('/api/warnings',{method:'DELETE',body:JSON.stringify({id:editingWarning.id})});
+    currentWarnings=currentWarnings.filter(w=>w.id!==editingWarning.id);
+    renderWarnings(); closeWarningModal(); showToast('Warning letter deleted');
+  } catch(e){showToast(e.message||'Delete failed',true);}
+}
+
+function closeWarningModal(e){
+  if(e&&e.target!==el('warning-modal')) return;
+  el('warning-modal').classList.add('hidden'); editingWarning=null;
+  resetWarningAttachment();
+}
+
+// ── TRAINING ──
+async function loadTraining(emp) {
+  const trainingEl = el('mp-training-content');
+  const nameToSearch = emp.trainingEmployeeId || emp.name;
+  try {
+    const data = await api(`/api/training?contractorName=${encodeURIComponent(nameToSearch)}`);
+    if (!data.summary) {
+      trainingEl.innerHTML = '<div style="font-size:13px;color:var(--muted)">No training records found in Safety App</div>';
+      return;
+    }
+    const s = data.summary;
+    trainingEl.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div style="padding:8px 12px;background:#EEF0F8;border-radius:8px">
+          <div style="font-size:20px;font-weight:500;color:var(--navy)">${s.totalHours}</div>
+          <div style="font-size:11px;color:var(--muted)">Total hours</div>
+        </div>
+        <div style="padding:8px 12px;background:#EEF0F8;border-radius:8px">
+          <div style="font-size:20px;font-weight:500;color:var(--navy)">${s.totalEntries}</div>
+          <div style="font-size:11px;color:var(--muted)">Entries</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">Last: ${s.lastSubmission}</div>
+      ${s.months.length?`<div style="font-size:12px;color:var(--muted);margin-top:4px">Months: ${s.months.slice(0,6).join(', ')}${s.months.length>6?'…':''}</div>`:''}`;
+  } catch(e) {
+    trainingEl.innerHTML = '<div style="font-size:13px;color:var(--muted)">Could not load training data</div>';
+  }
+}
+
+// ── MANAGER DROPDOWN ──
+async function loadManagerDropdown(panel) {
+  try {
+    var data = await api('/api/employees');
+    var empList = data.employees || [];
+    // Filter to employees with Role = Manager or Admin in Airtable
+    var managers = empList.filter(function(e){
+      return e.active !== false && (e.role === 'Manager' || e.role === 'Admin');
+    });
+    // Fallback: if none found with role, show all active employees
+    if(!managers.length) managers = empList.filter(function(e){ return e.active !== false; });
+    managers.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+    var container = panel || document;
+    var sel = container.querySelector('#edit-manager') || el('edit-manager');
+    if (!sel) return;
+    var currentVal = sel.value;
+    sel.innerHTML = '<option value="">— Select manager —</option>';
+    managers.forEach(function(m){
+      var o = document.createElement('option');
+      o.value = m.name;
+      o.textContent = m.name + (m.jobTitle ? ' — ' + m.jobTitle : '');
+      sel.appendChild(o);
+    });
+    if(currentVal) sel.value = currentVal;
+  } catch(e) { console.error('loadManagerDropdown error:', e); }
+}
+
+// ── EMERGENCY CONTACT POPUP ──
+function showEmergencyContact(id) {
+  const emp = allEmployees.find(e => e.id === id);
+  if (!emp) return;
+  const name = emp.emergencyName || '—';
+  const phone = emp.emergencyPhone || '—';
+  const rel = emp.emergencyRelation || '—';
+  const phoneLink = emp.emergencyPhone
+    ? `<a href="tel:${emp.emergencyPhone}" style="color:var(--navy);font-weight:600">${emp.emergencyPhone}</a>`
+    : '—';
+  // Show a small popup
+  const existing = document.getElementById('ec-popup');
+  if (existing) existing.remove();
+  const popup = document.createElement('div');
+  popup.id = 'ec-popup';
+  popup.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.15);z-index:200;min-width:260px;max-width:320px';
+  popup.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:600;color:var(--red);display:flex;align-items:center;gap:6px"><i class="ti ti-heart" style="font-size:15px"></i> Emergency Contact</div>
+      <button onclick="document.getElementById('ec-popup').remove()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:0"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:2px">${emp.name}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">${rel}</div>
+    <div style="font-size:14px;font-weight:500;margin-bottom:4px">${name}</div>
+    <div style="font-size:14px">${phoneLink}</div>
+  `;
+  document.body.appendChild(popup);
+  // Auto-dismiss after 8 seconds
+  setTimeout(() => { const p = document.getElementById('ec-popup'); if(p) p.remove(); }, 8000);
+}
+
+// ── ABSTRACT FILES ──
+function loadAbstractFiles(empId) {
+  const emp = allEmployees.find(e => e.id === empId);
+  const section = el('mp-abstract-files-section');
+  const listEl = el('mp-abstract-files-list');
+
+  if (!emp || !emp.abstractFiles || emp.abstractFiles.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = '';
+  listEl.innerHTML = emp.abstractFiles.map((f, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f5f4f0">
+      <i class="ti ti-file-description" style="font-size:20px;color:var(--navy);flex-shrink:0"></i>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.filename || 'Abstract file ' + (i+1)}</div>
+      </div>
+      <a href="${f.url}" target="_blank" style="flex-shrink:0" class="btn-sm primary" onclick="event.stopPropagation()">
+        <i class="ti ti-download" style="font-size:13px"></i> View
+      </a>
+    </div>
+  `).join('') + '<style>#mp-abstract-files-list > div:last-child{border-bottom:none}</style>';
+}
+
+function closeModal(e){if(e.target===el('profile-modal'))closeProfileModal();}
+function closeProfileModal(){el('profile-modal').classList.add('hidden');currentEmployee=null;}
+
+function showErr(msg){el('err-txt').textContent=msg;el('err-box').classList.add('show');}
+function hideErr(){el('err-box').classList.remove('show');}
+function showToast(msg,isErr){const t=el('toast');t.textContent=msg;t.className='toast show'+(isErr?' err':'');setTimeout(()=>t.className='toast',3000);}
+
+// -- LEAVE / VACATION REQUEST --
+var LEAVE_TYPES=['Annual Vacation (paid)','Sick Leave (paid)','Bereavement (paid)','Use of Banked Time','Leave Without Pay','Other Paid Leave'];
+var leaveEditingId=null;
+var leaveSource=null;
+var allRequestsCache=[];
+
+function showView(view){
+  el('view-directory').classList.add('hidden');
+  el('view-vacation').classList.add('hidden');
+  if(view==='directory'){el('view-directory').classList.remove('hidden');var qf=el('quick-forms-section');if(qf)qf.style.display='';doSearch();loadPendingCount();if(typeof loadFileRequestsCount==='function')loadFileRequestsCount();}
+  else if(view==='vacation'){el('view-vacation').classList.remove('hidden');initVacationForm();var qf=el('quick-forms-section');if(qf)qf.style.display='none';}
+}
+
+function initVacationForm(){
+  leaveEditingId=null;
+  buildLeaveRows();
+  el('leave-emp-name').value=session?session.name:'';
+  el('leave-date-of-request').value=new Date().toISOString().split('T')[0];
+  var empRecord=allEmployees.find(function(e){return e.id===session.employeeId;});
+  var depot=empRecord?empRecord.depot:'';
+  el('leave-location').value=depot||'';
+  el('leave-location-hint').textContent=depot?'Pre-filled from your profile':'';
+  var managerName=empRecord?empRecord.manager:'';
+  if(el('leave-manager-display'))el('leave-manager-display').value=managerName||'No manager assigned';
+  el('leave-details').value='';
+  el('leave-doctor-wrap').style.display='none';
+  el('leave-doc-no').checked=true;
+  var btn=el('leave-submit-btn');
+  btn.disabled=false;
+  btn.innerHTML='<i class="ti ti-send" style="font-size:13px"></i> Submit Request';
+  refreshMyRequestsBadge();
+}
+
+function refreshMyRequestsBadge(){
+  api('/api/vacation?employeeId='+session.employeeId).then(function(data){
+    var pending=(data.requests||[]).filter(function(r){return r.status==='Pending'||r.status==='Manager Approved';}).length;
+    var badge=el('my-requests-badge');
+    if(pending>0){badge.textContent=pending;badge.style.display='';}
+    else{badge.style.display='none';}
+  }).catch(function(){});
+}
+
+function buildLeaveRows(){
+  var rows='';
+  LEAVE_TYPES.forEach(function(type,i){
+    rows+='<tr id="leave-row-'+i+'">'
+      +'<td style="text-align:center;padding-left:16px"><input type="checkbox" id="leave-chk-'+i+'" onchange="toggleLeaveRow('+i+')" style="accent-color:var(--navy);width:15px;height:15px;cursor:pointer"/></td>'
+      +'<td style="font-size:13px;color:var(--text)">'+type+'</td>'
+      +'<td><input type="text" id="leave-days-'+i+'" placeholder="--" disabled style="width:64px;padding:6px 8px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;font-family:DM Sans,sans-serif;background:var(--bg);color:var(--muted)"/></td>'
+      +'<td><input type="date" id="leave-start-'+i+'" disabled style="padding:6px 8px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;font-family:DM Sans,sans-serif;background:var(--bg);color:var(--muted);width:100%"/></td>'
+      +'<td><input type="date" id="leave-end-'+i+'" disabled style="padding:6px 8px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;font-family:DM Sans,sans-serif;background:var(--bg);color:var(--muted);width:100%"/></td>'
+      +'</tr>';
+  });
+  el('leave-rows-body').innerHTML=rows;
+}
+
+function toggleLeaveRow(i){
+  var on=el('leave-chk-'+i).checked;
+  ['leave-days-','leave-start-','leave-end-'].forEach(function(pfx){
+    var inp=el(pfx+i);inp.disabled=!on;
+    inp.style.background=on?'#fff':'var(--bg)';inp.style.color=on?'var(--text)':'var(--muted)';
+  });
+  el('leave-row-'+i).style.background=on?'#f8f8ff':'';
+  el('leave-doctor-wrap').style.display=el('leave-chk-1').checked?'':'none';
+}
+
+function getLeaveRows(){
+  var result=[];
+  LEAVE_TYPES.forEach(function(type,i){
+    if(!el('leave-chk-'+i)||!el('leave-chk-'+i).checked)return;
+    result.push({type:type,days:el('leave-days-'+i).value.trim()||'',startDate:el('leave-start-'+i).value||'',endDate:el('leave-end-'+i).value||''});
+  });
+  return result;
+}
+
+async function submitLeaveRequest(){
+  var dateOfRequest=el('leave-date-of-request').value;
+  var leaveRows=getLeaveRows();
+  var location=el('leave-location').value;
+  var details=el('leave-details').value.trim();
+  var doctorCert=el('leave-chk-1').checked?(el('leave-doc-yes').checked?'Yes':'No'):'';
+  if(!dateOfRequest){showToast('Please enter the date of request',true);return;}
+  if(!leaveRows.length){showToast('Please select at least one leave type',true);return;}
+  // Work days and start date are required for every selected leave type
+  var firstBad=null;
+  LEAVE_TYPES.forEach(function(type,i){
+    var chk=el('leave-chk-'+i);
+    if(!chk||!chk.checked)return;
+    var daysEl=el('leave-days-'+i),startEl=el('leave-start-'+i);
+    var badDays=!daysEl.value.trim(),badStart=!startEl.value;
+    daysEl.style.borderColor=badDays?'var(--red)':'var(--border)';
+    startEl.style.borderColor=badStart?'var(--red)':'var(--border)';
+    if((badDays||badStart)&&!firstBad)firstBad=badDays?daysEl:startEl;
+  });
+  if(firstBad){showToast('Work days and start date are required for each selected leave type',true);firstBad.focus();return;}
+  var btn=el('leave-submit-btn');btn.disabled=true;
+  btn.innerHTML='<i class="ti ti-loader" style="font-size:13px"></i> Submitting...';
+  try{
+    var empRecord=allEmployees.find(function(e){return e.id===session.employeeId;});
+    await api('/api/vacation',{method:'POST',body:JSON.stringify({
+      employeeId:session.employeeId,employeeName:session.name,
+      employeeDepot:empRecord?empRecord.depot:'',employeeManager:empRecord?empRecord.manager:'',
+      employeeManagerId:empRecord?empRecord.managerId||'':'',
+      dateOfRequest:dateOfRequest,location:location,leaveRows:leaveRows,
+      doctorCertificate:doctorCert,details:details
+    })});
+    showToast('Leave request submitted successfully');
+    showView('directory');
+  }catch(e){showToast(e.message||'Submit failed',true);}
+  finally{btn.disabled=false;btn.innerHTML='<i class="ti ti-send" style="font-size:13px"></i> Submit Request';}
+}
+
+async function openMyRequestsModal(){
+  el('my-requests-modal').classList.remove('hidden');
+  el('my-requests-list').innerHTML='<div class="loading">Loading...</div>';
+  try{
+    var data=await api('/api/vacation?employeeId='+session.employeeId);
+    var reqs=data.requests||[];
+    el('my-requests-subtitle').textContent=reqs.length+' request'+(reqs.length!==1?'s':'');
+    if(!reqs.length){el('my-requests-list').innerHTML='<div class="empty"><i class="ti ti-calendar-off" style="font-size:28px;display:block;margin-bottom:8px"></i>No leave requests yet</div>';return;}
+    var statusCls={'Pending':'leave-status-pending','Manager Approved':'leave-status-manager-approved','Filed':'leave-status-filed','Approved':'leave-status-approved','Denied':'leave-status-denied'};
+    var html='';
+    reqs.forEach(function(r){
+      var sc=statusCls[r.status]||'leave-status-pending';
+      var lines='';
+      (r.leaveRows||[]).forEach(function(lr){lines+='<div style="font-size:12px;color:var(--muted)">'+lr.type+(lr.days?' - '+lr.days+' day(s)':'')+(lr.startDate?' - '+lr.startDate:'')+(lr.endDate&&lr.endDate!==lr.startDate?' to '+lr.endDate:'')+'</div>';});
+      html+='<div style="padding:12px 0;border-bottom:1px solid #f5f4f0">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
+        +'<span style="font-size:13px;font-weight:600">'+(r.dateOfRequest||'--')+'</span>'
+        +(r.location?'<span style="font-size:12px;color:var(--muted)"><i class="ti ti-map-pin" style="font-size:11px"></i> '+r.location+'</span>':'')
+        +'<span class="'+sc+'">'+r.status+'</span></div>'+lines
+        +(r.details?'<div style="font-size:12px;color:var(--muted);margin-top:4px;font-style:italic">'+r.details.slice(0,100)+(r.details.length>100?'...':'')+'</div>':'')
+        +(r.managerApprovedBy?'<div style="font-size:11px;color:var(--muted);margin-top:4px">Manager: '+r.managerApprovedBy+(r.managerNotes?' - '+r.managerNotes:'')+'</div>':'')
+        +(r.filedBy?'<div style="font-size:11px;color:var(--muted)">Filed by: '+r.filedBy+(r.filedDate?' - '+r.filedDate:'')+'</div>':'')
+        +'</div>';
+    });
+    el('my-requests-list').innerHTML=html+'<style>#my-requests-list > div:last-child{border-bottom:none}</style>';
+  }catch(e){el('my-requests-list').innerHTML='<div class="empty"><i class="ti ti-alert-circle"></i>Could not load requests</div>';}
+}
+function closeMyRequestsModal(){el('my-requests-modal').classList.add('hidden');}
+
+async function openAllLeaveRequestsModal(){
+  el('all-requests-modal').classList.remove('hidden');
+  el('all-requests-list').innerHTML='<div class="loading">Loading...</div>';
+  el('all-requests-filter').value='';
+  var isManager=session&&session.role==='Manager';
+  el('all-requests-title').textContent=isManager?'Team Leave Requests':'All Leave Requests';
+  try{
+    var url;
+    if(isManager){
+      var emp=allEmployees.find(function(e){return e.id===session.employeeId;});
+      var depot=emp?emp.depot:'';
+      url=depot?'/api/vacation?all=1&depot='+encodeURIComponent(depot):'/api/vacation?all=1';
+    }else{url='/api/vacation?all=1';}
+    var data=await api(url);
+    allRequestsCache=data.requests||[];
+    el('all-requests-subtitle').textContent=allRequestsCache.length+' request'+(allRequestsCache.length!==1?'s':'');
+    renderAllRequests(allRequestsCache);
+  }catch(e){el('all-requests-list').innerHTML='<div class="empty"><i class="ti ti-alert-circle"></i>Could not load requests</div>';}
+}
+
+function filterAllRequests(){
+  var f=el('all-requests-filter').value;
+  renderAllRequests(f?allRequestsCache.filter(function(r){return r.status===f;}):allRequestsCache);
+}
+
+function renderAllRequests(requests){
+  var list=el('all-requests-list');
+  if(!requests||!requests.length){list.innerHTML='<div class="empty"><i class="ti ti-calendar-off" style="font-size:28px;display:block;margin-bottom:8px"></i>No requests found</div>';return;}
+  var isManager=session&&session.role==='Manager';
+  var isAdmin=isAdminRole();
+  var isTerri=session&&session.name==='Terri Lee';
+  var statusCls={'Pending':'leave-status-pending','Manager Approved':'leave-status-manager-approved','Filed':'leave-status-filed','Approved':'leave-status-approved','Denied':'leave-status-denied'};
+  var html='';
+  requests.forEach(function(r){
+    var sc=statusCls[r.status]||'leave-status-pending';
+    var lines='';
+    (r.leaveRows||[]).forEach(function(lr){lines+='<div style="font-size:12px;color:var(--muted)">'+lr.type+(lr.days?' - '+lr.days+' day(s)':'')+(lr.startDate?' - '+lr.startDate:'')+(lr.endDate&&lr.endDate!==lr.startDate?' to '+lr.endDate:'')+'</div>';});
+    var mAct=(isManager||r.employeeManager===session.name)&&r.status==='Pending';
+    var aAct=(isAdmin||isTerri)&&r.status==='Manager Approved';
+    var canReview=mAct||aAct||isAdmin||isTerri;
+    html+='<div style="padding:12px 0;border-bottom:1px solid #f5f4f0;cursor:'+(canReview?'pointer':'default')+'" data-reviewid="'+r.id+'" data-canreview="'+(canReview?'1':'')+'">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
+      +'<span style="font-size:13px;font-weight:600">'+r.employeeName+'</span><span style="color:var(--border)">·</span>'
+      +'<span style="font-size:13px;font-weight:500">'+(r.dateOfRequest||'--')+'</span>'
+      +(r.location?'<span style="font-size:12px;color:var(--muted)"><i class="ti ti-map-pin" style="font-size:11px"></i> '+r.location+'</span>':'')
+      +'<span class="'+sc+'">'+r.status+'</span>'
+      +(mAct?'<span style="font-size:11px;color:var(--navy);font-weight:600">· Needs your approval</span>':'')
+      +(aAct?'<span style="font-size:11px;color:var(--green);font-weight:600">· Ready to file</span>':'')
+      +'</div>'+lines+'</div>';
+  });
+  list.innerHTML=html+'<style>#all-requests-list > div:last-child{border-bottom:none}</style>';
+  list.querySelectorAll('[data-canreview="1"]').forEach(function(div){
+    div.addEventListener('click',function(){openLeaveReview(this.getAttribute('data-reviewid'),'all');});
+  });
+}
+function closeAllRequestsModal(){el('all-requests-modal').classList.add('hidden');}
+
+async function openLeaveReview(id,source){
+  el('all-requests-modal').classList.add('hidden');
+  el('all-leave-modal').classList.add('hidden');
+  try{
+    var data=await api('/api/vacation?all=1');
+    var r=data.requests.find(function(x){return x.id===id;});if(!r)return;
+    leaveEditingId=id;
+    leaveSource=source||null;
+    el('leave-review-overlay').classList.add('open');
+    el('leave-review-panel').classList.add('open');
+    el('review-subtitle').textContent=r.employeeName+' - submitted '+r.dateOfRequest;
+    var statusCls={'Pending':'leave-status-pending','Manager Approved':'leave-status-manager-approved','Filed':'leave-status-filed','Approved':'leave-status-approved','Denied':'leave-status-denied'};
+    el('review-status-badge').innerHTML='<span class="'+(statusCls[r.status]||'leave-status-pending')+'" style="font-size:13px;padding:4px 12px">'+r.status+'</span>';
+    el('review-emp-name').value=r.employeeName;
+    el('review-date-of-request').value=r.dateOfRequest;
+    el('review-manager-name').value=r.employeeManager||'--';
+    el('review-location').value=r.location||'--';
+    var rowsHtml='<table style="width:100%;border-collapse:collapse"><thead><tr>'
+      +'<th style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;padding:6px 8px;text-align:left;border-bottom:1.5px solid var(--border)">Type</th>'
+      +'<th style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;padding:6px 8px;text-align:left;border-bottom:1.5px solid var(--border)">Days</th>'
+      +'<th style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;padding:6px 8px;text-align:left;border-bottom:1.5px solid var(--border)">Start</th>'
+      +'<th style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;padding:6px 8px;text-align:left;border-bottom:1.5px solid var(--border)">End</th>'
+      +'</tr></thead><tbody>';
+    (r.leaveRows||[]).forEach(function(lr){
+      rowsHtml+='<tr><td style="padding:8px;font-size:13px;border-bottom:1px solid #f5f4f0">'+lr.type+'</td>'
+        +'<td style="padding:8px;font-size:13px;border-bottom:1px solid #f5f4f0">'+(lr.days||'--')+'</td>'
+        +'<td style="padding:8px;font-size:13px;border-bottom:1px solid #f5f4f0">'+(lr.startDate||'--')+'</td>'
+        +'<td style="padding:8px;font-size:13px;border-bottom:1px solid #f5f4f0">'+(lr.endDate||'--')+'</td></tr>';
+    });
+    rowsHtml+='</tbody></table>';
+    el('review-leave-rows').innerHTML=rowsHtml;
+    if(r.doctorCertificate){el('review-doctor-row').style.display='';el('review-doctor-row').innerHTML='<i class="ti ti-stethoscope" style="font-size:13px;margin-right:6px"></i>Doctor’s Certificate: <strong>'+r.doctorCertificate+'</strong>';}
+    else{el('review-doctor-row').style.display='none';}
+    if(r.details){el('review-details-card').style.display='';el('review-details-text').textContent=r.details;}
+    else{el('review-details-card').style.display='none';}
+    var trail='';
+    if(r.managerApprovedBy)trail+='<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f5f4f0"><i class="ti ti-user-check" style="font-size:16px;color:#4A7FC1;flex-shrink:0;margin-top:1px"></i><div><div style="font-size:13px;font-weight:600">Manager: '+r.managerApprovedBy+'</div><div style="font-size:12px;color:var(--muted)">'+(r.managerApprovedDate||'')+(r.managerNotes?' - '+r.managerNotes:'')+'</div></div></div>';
+    if(r.filedBy)trail+='<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0"><i class="ti ti-folder-check" style="font-size:16px;color:var(--green);flex-shrink:0;margin-top:1px"></i><div><div style="font-size:13px;font-weight:600">Filed by: '+r.filedBy+'</div><div style="font-size:12px;color:var(--muted)">'+(r.filedDate||'')+'</div></div></div>';
+    el('review-trail-card').style.display=trail?'':'none';el('review-trail-body').innerHTML=trail;
+    var isManager=session&&session.role==='Manager';
+    var isAdmin=isAdminRole();
+    var isTerri=session&&session.name==='Terri Lee';
+    // Show approve button if user is assigned manager of this employee (by name match)
+    var isThisManager=r.employeeManager===session.name;
+    el('review-manager-action').style.display=((isManager||isThisManager)&&r.status==='Pending')?'':'none';
+    var isAdminManager=hasJobTitle(session.jobTitle||'','Administration Manager');
+    el('review-admin-action').style.display=((isTerri||isAdminManager)&&r.status==='Manager Approved')?'':'none';
+    el('review-admin-delete').style.display=(session&&session.name==='Troy Johnston')?'':'none';
+    el('leave-manager-notes').value='';
+
+  }catch(e){showToast('Could not load request',true);}
+}
+
+async function managerDecision(decision){
+  if(!leaveEditingId)return;
+  var notes=el('leave-manager-notes').value.trim();
+  var action=decision==='approve'?'manager-approve':'manager-deny';
+  if(!confirm(decision==='approve'?'Approve and send to admin?':'Deny this request?'))return;
+  try{
+    await api('/api/vacation',{method:'PATCH',body:JSON.stringify({id:leaveEditingId,action:action,managerApprovedBy:session.name,managerApprovedDate:new Date().toISOString().split('T')[0],managerNotes:notes})});
+    showToast('Request '+(decision==='approve'?'approved and sent to admin':'denied'));
+    if(leaveSource==='pending'){openAllLeaveRequestsModal();}else{openAllLeaveRequestsModal();}
+  }catch(e){showToast(e.message||'Action failed',true);}
+}
+
+async function fileLeaveRequest(){
+  if(!leaveEditingId)return;
+  if(!confirm('Acknowledge and file this leave request?'))return;
+  try{
+    await api('/api/vacation',{method:'PATCH',body:JSON.stringify({id:leaveEditingId,action:'file',filedBy:session.name,filedDate:new Date().toISOString().split('T')[0]})});
+    showToast('Leave request filed');
+    if(leaveSource==='pending'){openAllLeaveRequestsModal();}else{openAllLeaveRequestsModal();}
+  }catch(e){showToast(e.message||'Action failed',true);}
+}
+
+async function deleteLeaveRequest(){
+  if(!session||session.name!=='Troy Johnston'){showToast('Only Troy Johnston can delete leave requests',true);return;}
+  if(!leaveEditingId||!confirm('Delete this leave request? This cannot be undone.'))return;
+  try{
+    await api('/api/vacation',{method:'DELETE',body:JSON.stringify({id:leaveEditingId})});
+    showToast('Request deleted');closeLeaveReview();
+  }catch(e){showToast(e.message||'Delete failed',true);}
+}
+
+
+// -- PENDING APPROVALS --
+async function loadPendingCount(){
+  try{
+    var isManager=session&&session.role==='Manager';
+    var isTerri=session&&session.name==='Terri Lee';
+    var isAdmin=isAdminRole();
+    var data=await api('/api/vacation?all=1');
+    var requests=data.requests||[];
+    var seniorTitles=['General Manager','Facility Manager','Operations Manager','Administration Manager'];
+    var isSenior=hasAnyJobTitle(session.jobTitle||'',seniorTitles);
+    if(!isAdmin&&!isTerri&&!isSenior){requests=requests.filter(function(r){return r.employeeManager===session.name;});}
+    var pending=requests.filter(function(r){
+      if(isManager||r.employeeManager===session.name) return r.status==='Pending';
+      var isAdminMgr2=hasAnyJobTitle(session&&session.jobTitle||'',['Administration Manager']);
+      if(isTerri||isAdminMgr2) return r.status==='Manager Approved';
+      return false;
+    });
+    var badge=el('all-leave-count');
+    var btn=el('all-leave-btn');
+    if(pending.length>0){
+      badge.textContent=pending.length;
+      badge.style.display='';
+      btn.style.borderColor='var(--navy)';
+    }else{
+      badge.style.display='none';
+      btn.style.borderColor='var(--border)';
+    }
+  }catch(e){}
+}
+
+async function openAllLeaveRequestsModal(){
+  el('all-leave-modal').classList.remove('hidden');
+  el('all-leave-list').innerHTML='<div class="loading">Loading...</div>';
+  try{
+    var isManager=session&&session.role==='Manager';
+    var isTerri=session&&session.name==='Terri Lee';
+    var isAdmin=isAdminRole();
+    var data=await api('/api/vacation?all=1');
+    var all=data.requests||[];
+    // Senior managers see all; regular managers see only their employees
+    var seniorTitles=['General Manager','Facility Manager','Operations Manager','Administration Manager'];
+    var isSenior=hasAnyJobTitle(session.jobTitle||'',seniorTitles);
+    if(!isAdmin&&!isTerri&&!isSenior){
+      // Show requests where user is assigned as manager
+      all=all.filter(function(r){return r.employeeManager===session.name;});
+    }
+    // Sort: pending-action items first, then by date desc
+    var needsAction=all.filter(function(r){
+      if(isManager||r.employeeManager===session.name) return r.status==='Pending';
+      var isAdminMgr=hasAnyJobTitle(session.jobTitle||'',['Administration Manager']);
+      if(isTerri||isAdminMgr) return r.status==='Manager Approved';
+      return false;
+    });
+    var rest=all.filter(function(r){return needsAction.indexOf(r)===-1;});
+    var sorted=needsAction.concat(rest);
+    el('all-leave-subtitle').textContent=all.length+' request'+(all.length!==1?'s':'')+' · '+needsAction.length+' awaiting action';
+    // Update badge
+    var badge=el('all-leave-count');
+    if(needsAction.length>0){badge.textContent=needsAction.length;badge.style.display='';}
+    else{badge.style.display='none';}
+    if(!sorted.length){
+      el('all-leave-list').innerHTML='<div class="empty"><i class="ti ti-calendar-off" style="font-size:28px;display:block;margin-bottom:8px"></i>No requests found</div>';
+      return;
+    }
+    var statusCls={'Pending':'leave-status-pending','Manager Approved':'leave-status-manager-approved','Filed':'leave-status-filed','Approved':'leave-status-approved','Denied':'leave-status-denied'};
+    var html='';
+    if(needsAction.length){
+      html+='<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;padding:10px 0 6px">Needs action</div>';
+    }
+    var shownDivider=false;
+    sorted.forEach(function(r,idx){
+      var isActionItem=needsAction.indexOf(r)!==-1;
+      if(!isActionItem&&!shownDivider&&needsAction.length){
+        html+='<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;padding:10px 0 6px;border-top:1.5px solid var(--border);margin-top:4px">All requests</div>';
+        shownDivider=true;
+      }
+      var sc=statusCls[r.status]||'leave-status-pending';
+      var mAct=(isManager||r.employeeManager===session.name)&&r.status==='Pending';
+      var aAct=(isAdmin||isTerri)&&r.status==='Manager Approved';
+      var canReview=mAct||aAct||isAdmin||isTerri;
+      html+='<div style="padding:12px 0;border-bottom:1px solid #f5f4f0;cursor:'+(canReview?'pointer':'default')+'" data-reviewid="'+r.id+'" data-canreview="'+(canReview?'1':'')+'">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
+        +'<span style="font-size:13px;font-weight:600">'+r.employeeName+'</span>'
+        +'<span style="color:var(--border)">·</span>'
+        +'<span style="font-size:13px;font-weight:500">'+(r.dateOfRequest||'--')+'</span>'
+        +(r.location?'<span style="font-size:12px;color:var(--muted)"><i class="ti ti-map-pin" style="font-size:11px"></i> '+r.location+'</span>':'')
+        +'<span class="'+sc+'">'+r.status+'</span>'
+        +(mAct?'<span style="font-size:11px;color:#633806;font-weight:600">· Needs your approval</span>':'')
+        +(aAct?'<span style="font-size:11px;color:var(--green);font-weight:600">· Ready to file</span>':'')
+        +'</div>';
+      (r.leaveRows||[]).forEach(function(lr){
+        html+='<div style="font-size:12px;color:var(--muted)">'+lr.type+(lr.days?' - '+lr.days+' day(s)':'')+(lr.startDate?' - '+lr.startDate:'')+(lr.endDate&&lr.endDate!==lr.startDate?' to '+lr.endDate:'')+'</div>';
+      });
+      html+='</div>';
+    });
+    el('all-leave-list').innerHTML=html+'<style>#all-leave-list > div:last-child{border-bottom:none}</style>';
+    el('all-leave-list').querySelectorAll('[data-canreview="1"]').forEach(function(div){
+      div.addEventListener('click',function(){
+        el('all-leave-modal').classList.add('hidden');
+        openLeaveReview(this.getAttribute('data-reviewid'),'all');
+      });
+    });
+  }catch(e){
+    console.error('openAllLeaveRequestsModal failed:',e);
+    el('all-leave-list').innerHTML='<div class="empty"><i class="ti ti-alert-circle"></i>Could not load requests<div style="font-size:11px;color:var(--muted);margin-top:6px;font-weight:500">'+((e&&e.message)?String(e.message):'Unknown error')+'</div></div>';
+  }
+}
+
+
+
+function closeLeaveReview(){
+  el('leave-review-overlay').classList.remove('open');
+  el('leave-review-panel').classList.remove('open');
+  // Return to correct modal
+  if(leaveSource==='all'||leaveSource==='pending'){openAllLeaveRequestsModal();}
+  else if(leaveSource==='my'){openMyRequestsModal();}
+}
+
+
+function toggleFobHighlight(labelId, checked){
+  el(labelId).style.borderColor = checked ? 'var(--navy)' : 'var(--border)';
+  el(labelId).style.background = checked ? '#EEF0F8' : 'var(--bg)';
+}
+
+async function sendFobEmail(type, emp){
+  try{
+    var recipientRole = type==='door' ? 'IT Manager' : 'Fleet Manager';
+    // Find the recipient by job title from allEmployees
+    var recipient = allEmployees.find(function(e){
+      return e.active!==false && hasJobTitle(e.jobTitle||'', recipientRole);
+    });
+    if(!recipient||!recipient.email){
+      showToast('Could not find '+recipientRole+' email — FOB request not sent', true);
+      return;
+    }
+    var subject = (type==='door'?'Door':'Driver')+' FOB Request — '+emp.name;
+    var body = {
+      type: type==='door'?'door_fob':'driver_fob',
+      employeeName: emp.name,
+      jobTitle: emp.jobTitle||'',
+      department: emp.department||'',
+      depot: emp.depot||'',
+      startDate: emp.startDate||'',
+      email: emp.email||'',
+      recipientEmail: recipient.email,
+      recipientName: recipient.name,
+      subject: subject
+    };
+    await api('/api/notify-fob', {method:'POST', body:JSON.stringify(body)});
+    showToast((type==='door'?'Door':'Driver')+' FOB request sent to '+recipient.name+' ✓');
+  }catch(e){
+    showToast('FOB email error: '+(e.message||'failed'), true);
+  }
+}
+
+
+// Helper: check if jobTitle (may be comma-separated) includes a given title
+function hasJobTitle(jobTitleStr, title){
+  if(!jobTitleStr) return false;
+  // Job Title may arrive as an array (Airtable multi-select/linked field) or other non-string
+  if(Array.isArray(jobTitleStr)) jobTitleStr = jobTitleStr.join(',');
+  else if(typeof jobTitleStr !== 'string') jobTitleStr = String(jobTitleStr);
+  return jobTitleStr.split(',').map(function(t){return t.trim().toLowerCase();})
+    .indexOf(String(title).toLowerCase()) !== -1;
+}
+function hasAnyJobTitle(jobTitleStr, titles){
+  return titles.some(function(t){return hasJobTitle(jobTitleStr, t);});
+}
+// Normalize a Job Title value (string OR Airtable array) into a clean array of titles
+function titleList(jt){
+  if(!jt) return [];
+  if(Array.isArray(jt)) return jt.map(function(t){return String(t).trim();}).filter(Boolean);
+  return String(jt).split(',').map(function(t){return t.trim();}).filter(Boolean);
+}
+
+
+async function loadJobTitleOptions(){
+  try{
+    var options = [];
+    // Try metadata API first
+    try{
+      var meta = await api('/api/employees?meta=fields');
+      options = (meta.fields && meta.fields['Job Title']) || [];
+    }catch(metaErr){}
+    // Fallback: extract unique job titles from loaded employees
+    if(!options.length && allEmployees && allEmployees.length){
+      var titleSet = {};
+      allEmployees.forEach(function(e){
+        if(!e.jobTitle) return;
+        titleList(e.jobTitle).forEach(function(trimmed){ titleSet[trimmed] = true; });
+      });
+      options = Object.keys(titleSet).sort();
+    }
+    // Last resort: fetch employees to get titles
+    if(!options.length){
+      try{
+        var empData = await api('/api/employees');
+        var titleSet2 = {};
+        (empData.employees||[]).forEach(function(e){
+          if(!e.jobTitle) return;
+          titleList(e.jobTitle).forEach(function(trimmed){ titleSet2[trimmed] = true; });
+        });
+        options = Object.keys(titleSet2).sort();
+      }catch(e2){}
+    }
+    var container = el('edit-title-checks');
+    var currentVals = Array.from(document.querySelectorAll('#edit-title-checks input:checked')).map(function(cb){return cb.value;});
+    if(!options.length){
+      container.innerHTML='<div style="font-size:12px;color:var(--muted)">No job titles found — please add job titles to existing employees first</div>';
+      return;
+    }
+    container.innerHTML = '';
+    options.forEach(function(opt){
+      var checked = currentVals.indexOf(opt) !== -1;
+      var lbl = document.createElement('label');
+      lbl.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12px;font-weight:400;cursor:pointer;padding:5px 8px;border-radius:6px;border:1.5px solid '+(checked?'var(--navy)':'var(--border)')+';background:'+(checked?'#EEF0F8':'#fff')+';overflow:hidden';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = opt;
+      cb.checked = checked;
+      cb.style.cssText = 'accent-color:var(--navy);width:13px;height:13px;flex-shrink:0';
+      cb.addEventListener('change', function(){
+        lbl.style.background = this.checked ? '#EEF0F8' : '#fff';
+        lbl.style.borderColor = this.checked ? 'var(--navy)' : 'var(--border)';
+      });
+      var txt = document.createTextNode(opt);
+      var span = document.createElement('span');
+      span.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      span.title = opt;
+      span.appendChild(txt);
+      lbl.appendChild(cb);
+      lbl.appendChild(span);
+      container.appendChild(lbl);
+    });
+  }catch(e){
+    el('edit-title-checks').innerHTML='<div style="font-size:12px;color:var(--muted)">Could not load job titles</div>';
+    console.error('loadJobTitleOptions error:', e);
+  }
+}
+
+
+// -- PHOTO UPLOAD --
+var pendingPhotoUrl = null;
+var pendingIncidentAttachment = null;
+var pendingWarningAttachment = null;
+
+function handleIncidentAttachment(input){
+  var file=input.files[0]; if(!file)return;
+  var st=el('inc-attach-status');
+  if(file.size>10*1024*1024){showToast('File must be under 10MB',true);input.value='';return;}
+  st.textContent='Reading…'; st.style.color='';
+  var r=new FileReader();
+  r.onload=function(e){pendingIncidentAttachment={url:e.target.result,name:file.name};st.textContent='✔ '+file.name;st.style.color='var(--green)';};
+  r.readAsDataURL(file);
+}
+function handleWarningAttachment(input){
+  var file=input.files[0]; if(!file)return;
+  var st=el('warn-attach-status');
+  if(file.size>10*1024*1024){showToast('File must be under 10MB',true);input.value='';return;}
+  st.textContent='Reading…'; st.style.color='';
+  var r=new FileReader();
+  r.onload=function(e){pendingWarningAttachment={url:e.target.result,name:file.name};st.textContent='✔ '+file.name;st.style.color='var(--green)';};
+  r.readAsDataURL(file);
+}
+function resetIncidentAttachment(){
+  pendingIncidentAttachment=null;
+  var inp=el('inc-attach-input');if(inp)inp.value='';
+  var st=el('inc-attach-status');if(st){st.textContent='PDF, JPG, PNG, Word — max 10MB';st.style.color='';}
+}
+function resetWarningAttachment(){
+  pendingWarningAttachment=null;
+  var inp=el('warn-attach-input');if(inp)inp.value='';
+  var st=el('warn-attach-status');if(st){st.textContent='PDF, JPG, PNG, Word — max 10MB';st.style.color='';}
+}
+var pendingPhotoFileName = null;
+
+function handlePhotoSelect(event){
+  var file = event.target.files[0];
+  if(!file) return;
+  if(file.size > 5 * 1024 * 1024){
+    showToast('Photo must be under 5MB', true);
+    return;
+  }
+  var statusEl = el('photo-upload-status');
+  statusEl.textContent = 'Reading file...';
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var dataUrl = e.target.result;
+    // Preview immediately
+    el('edit-photo-preview').innerHTML = '<img src="'+dataUrl+'" alt="Preview" style="width:100%;height:100%;object-fit:cover"/>';
+    statusEl.textContent = 'Uploading...';
+    // Upload to get a permanent URL
+    uploadPhotoToImgBB(dataUrl, file.name, statusEl);
+  };
+  reader.readAsDataURL(file);
+}
+
+function uploadPhotoToImgBB(dataUrl, fileName, statusEl){
+  // Store the data URL directly — Airtable accepts base64 data URLs
+  pendingPhotoUrl = dataUrl;
+  pendingPhotoFileName = fileName;
+  statusEl.textContent = 'Photo ready to save ✓';
+  statusEl.style.color = 'var(--green)';
+}
+
+// Self-service: an employee updating their own profile photo from their profile
+function changeOwnPhoto(event){
+  var file = event.target.files[0];
+  event.target.value = '';
+  if(!file) return;
+  if(!file.type || file.type.indexOf('image/') !== 0){ showToast('Please choose an image file', true); return; }
+  if(file.size > 5 * 1024 * 1024){ showToast('Photo must be under 5MB', true); return; }
+  var statusEl = el('own-photo-status');
+  statusEl.style.color = 'var(--muted)';
+  statusEl.textContent = 'Reading…';
+  var reader = new FileReader();
+  reader.onload = async function(e){
+    var dataUrl = e.target.result;
+    var emp = currentEmployee;
+    el('mp-photo').innerHTML = '<img src="'+dataUrl+'" alt=""/>';   // optimistic preview
+    statusEl.textContent = 'Saving…';
+    try{
+      var updated = await api('/api/employees', { method:'PATCH', body: JSON.stringify({ id: emp.id, photoUrl: dataUrl, photoFileName: file.name }) });
+      var idx = allEmployees.findIndex(function(x){ return x.id === updated.id; });
+      if(idx > -1) allEmployees[idx] = updated;
+      currentEmployee = updated;
+      doSearch();
+      statusEl.style.color = 'var(--green)';
+      statusEl.textContent = 'Photo updated ✓';
+      showToast('Profile photo updated ✓');
+    }catch(err){
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = 'Upload failed';
+      showToast('Could not update photo: ' + (err.message || 'error'), true);
+      openProfile(emp.id);   // revert the optimistic preview
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+
+// ── LEAVE CALENDAR ──────────────────────────────────────────
+var calYear = new Date().getFullYear();
+var calMonth = new Date().getMonth(); // 0-indexed
+var calRequests = [];
+
+var LEAVE_COLORS = {
+  'Annual Vacation (paid)': {bg:'#DBEAFE',color:'#1E40AF'},
+  'Sick Leave (paid)':      {bg:'#FDE8D8',color:'#92400E'},
+  'Bereavement (paid)':     {bg:'#EDE9FE',color:'#4C1D95'},
+  'Use of Banked Time':     {bg:'#D1FAE5',color:'#065F46'},
+  'Leave Without Pay':      {bg:'#FEE2E2',color:'#991B1B'},
+  'Other Paid Leave':       {bg:'#D1FAE5',color:'#065F46'}
+};
+
+function leaveColor(type){
+  return LEAVE_COLORS[type] || {bg:'#E5E7EB',color:'#374151'};
+}
+
+async function openCalendarModal(){
+  el('calendar-modal').classList.remove('hidden');
+  if(!calRequests.length){
+    await loadCalendarData();
+  }
+  renderCalendar();
+}
+
+function closeCalendarModal(){
+  el('calendar-modal').classList.add('hidden');
+}
+
+async function loadCalendarData(){
+  try{
+    var data = await api('/api/vacation?all=1');
+    // Only show Filed or Approved requests
+    calRequests = (data.requests||[]).filter(function(r){
+      return r.status === 'Filed' || r.status === 'Approved' || r.status === 'Manager Approved';
+    });
+  }catch(e){
+    calRequests = [];
+  }
+}
+
+function calendarNav(dir){
+  calMonth += dir;
+  if(calMonth > 11){ calMonth = 0; calYear++; }
+  if(calMonth < 0){ calMonth = 11; calYear--; }
+  renderCalendar();
+}
+
+function getDateRange(startDate, endDate){
+  // Returns array of date strings YYYY-MM-DD between start and end inclusive
+  if(!startDate) return [];
+  var dates = [];
+  var cur = new Date(startDate + 'T00:00:00');
+  var end = endDate ? new Date(endDate + 'T00:00:00') : cur;
+  while(cur <= end){
+    dates.push(cur.toISOString().split('T')[0]);
+    cur.setDate(cur.getDate() + 1);
+  }
+  return dates;
+}
+
+function buildEventMap(){
+  // Build a map of date -> [{employeeName, type, requestId}]
+  var map = {};
+  calRequests.forEach(function(r){
+    (r.leaveRows||[]).forEach(function(lr){
+      if(!lr.startDate) return;
+      var dates = getDateRange(lr.startDate, lr.endDate||lr.startDate);
+      dates.forEach(function(d){
+        if(!map[d]) map[d] = [];
+        map[d].push({
+          name: r.employeeName,
+          type: lr.type,
+          id: r.id,
+          startDate: lr.startDate,
+          endDate: lr.endDate||lr.startDate
+        });
+      });
+    });
+  });
+  return map;
+}
+
+function renderCalendar(){
+  var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  el('calendar-month-label').textContent = monthNames[calMonth] + ' ' + calYear;
+
+  var eventMap = buildEventMap();
+  var today = new Date().toISOString().split('T')[0];
+
+  // First day of month, last day
+  var firstDay = new Date(calYear, calMonth, 1);
+  var lastDay = new Date(calYear, calMonth + 1, 0);
+  var startDow = firstDay.getDay(); // 0=Sun
+
+  var grid = el('calendar-grid');
+  var html = '';
+
+  // Pad start
+  var prevMonthLast = new Date(calYear, calMonth, 0).getDate();
+  for(var i = startDow - 1; i >= 0; i--){
+    var d = prevMonthLast - i;
+    html += '<div class="cal-cell other-month"><div class="cal-day-num" style="opacity:0.4">'+d+'</div></div>';
+  }
+
+  // Days in month
+  for(var day = 1; day <= lastDay.getDate(); day++){
+    var dateStr = calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    var isToday = dateStr === today;
+    var events = eventMap[dateStr] || [];
+    var maxShow = 3;
+    var shown = events.slice(0, maxShow);
+    var extra = events.length - maxShow;
+
+    var eventsHtml = shown.map(function(ev){
+      var c = leaveColor(ev.type);
+      var shortName = ev.name.split(' ')[0];
+      return '<div class="cal-event" style="background:'+c.bg+';color:'+c.color+'" '
+        +'data-calday="'+dateStr+'" title="'+ev.name+' - '+ev.type+'">'+shortName+'</div>';
+    }).join('');
+
+    if(extra > 0){
+      eventsHtml += '<div class="cal-more" data-calday="'+dateStr+'">+'+extra+' more</div>';
+    }
+
+    html += '<div class="cal-cell'+(isToday?' today':'')+'">'
+      +'<div class="cal-day-num">'+day+'</div>'
+      +eventsHtml
+      +'</div>';
+  }
+
+  // Pad end
+  var remaining = 7 - ((startDow + lastDay.getDate()) % 7);
+  if(remaining < 7){
+    for(var j = 1; j <= remaining; j++){
+      html += '<div class="cal-cell other-month"><div class="cal-day-num" style="opacity:0.4">'+j+'</div></div>';
+    }
+  }
+
+  grid.innerHTML = html;
+  grid.querySelectorAll('[data-calday]').forEach(function(el){
+    el.addEventListener('click', function(){ showCalendarDay(this.getAttribute('data-calday')); });
+  });
+}
+
+function showCalendarDay(dateStr){
+  var eventMap = buildEventMap();
+  var events = eventMap[dateStr] || [];
+  if(!events.length) return;
+
+  var d = new Date(dateStr + 'T00:00:00');
+  var label = d.toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  el('cal-day-title').textContent = label;
+  el('cal-day-subtitle').textContent = events.length+' employee'+(events.length!==1?'s':'')+' on leave';
+
+  var html = events.map(function(ev){
+    var c = leaveColor(ev.type);
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f5f4f0">'
+      +'<div style="width:8px;height:8px;border-radius:50%;background:'+c.color+';flex-shrink:0"></div>'
+      +'<div><div style="font-size:13px;font-weight:600">'+ev.name+'</div>'
+      +'<div style="font-size:12px;color:var(--muted)">'+ev.type
+      +(ev.startDate?' · '+ev.startDate+(ev.endDate&&ev.endDate!==ev.startDate?' to '+ev.endDate:''):'')
+      +'</div></div></div>';
+  }).join('') + '<style>#cal-day-list > div:last-child{border-bottom:none}</style>';
+
+  el('cal-day-list').innerHTML = html;
+  el('calendar-day-modal').classList.remove('hidden');
+}
+
+
+async function doResetPassword(){
+  var username = el('rp-username').value.trim();
+  var password = el('rp-password').value;
+  var confirm = el('rp-confirm').value;
+  var errEl = el('rp-error');
+  var sucEl = el('rp-success');
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if(!username){ errEl.textContent='Username is required'; errEl.style.display=''; return; }
+  if(!password){ errEl.textContent='Password is required'; errEl.style.display=''; return; }
+  if(password.length < 6){ errEl.textContent='Password must be at least 6 characters'; errEl.style.display=''; return; }
+  if(password !== confirm){ errEl.textContent='Passwords do not match'; errEl.style.display=''; return; }
+
+  try{
+    var res = await fetch(API+'/api/reset-password', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        secret: 'mrdc-reset-2024',
+        username: username,
+        newPassword: password
+      })
+    });
+    var data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Reset failed');
+    sucEl.textContent = data.message || 'Password updated successfully';
+    sucEl.style.display = '';
+    el('rp-username').value = '';
+    el('rp-password').value = '';
+    el('rp-confirm').value = '';
+  }catch(e){
+    errEl.textContent = e.message || 'Reset failed';
+    errEl.style.display = '';
+  }
+}
+
+
+async function doChangeMyPassword(){
+  var current = el('cp-current').value;
+  var pw      = el('cp-new').value;
+  var conf    = el('cp-confirm').value;
+  var errEl = el('cp-error'), sucEl = el('cp-success'), btn = el('cp-submit');
+  errEl.style.display='none'; sucEl.style.display='none';
+  if(!current){ errEl.textContent='Enter your current password'; errEl.style.display=''; return; }
+  if(!pw){ errEl.textContent='Enter a new password'; errEl.style.display=''; return; }
+  if(pw.length < 6){ errEl.textContent='New password must be at least 6 characters'; errEl.style.display=''; return; }
+  if(pw !== conf){ errEl.textContent='New passwords do not match'; errEl.style.display=''; return; }
+  if(pw === current){ errEl.textContent='New password must be different from your current one'; errEl.style.display=''; return; }
+  if(!session || !session.username){ errEl.textContent='Could not determine your account \u2014 please sign out and back in.'; errEl.style.display=''; return; }
+  var orig = btn.innerHTML; btn.disabled=true; btn.innerHTML='<i class="ti ti-loader-2" style="font-size:13px"></i> Updating\u2026';
+  try{
+    // 1) Verify the current password by attempting a login (result is ignored; session is unchanged)
+    try{
+      await api('/api/login',{method:'POST',body:JSON.stringify({username:session.username,password:current})});
+    }catch(_){ throw new Error('Your current password is incorrect'); }
+    // 2) Set the new password on the user's own account
+    var res = await fetch(API+'/api/reset-password',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ secret:'mrdc-reset-2024', username:session.username, newPassword:pw })
+    });
+    var data; try{ data = await res.json(); }catch(_){ data = {}; }
+    if(!res.ok) throw new Error(data.error || 'Could not update password');
+    sucEl.textContent = 'Your password has been updated. Use it next time you sign in.';
+    sucEl.style.display='';
+    el('cp-current').value=''; el('cp-new').value=''; el('cp-confirm').value='';
+  }catch(e){
+    errEl.textContent = e.message || 'Could not update password';
+    errEl.style.display='';
+  }finally{
+    btn.disabled=false; btn.innerHTML=orig;
+  }
+}
+
+
+async function openMyProfileModal(){
+  var emp=allEmployees&&allEmployees.find(function(e){return e.id===session.employeeId;});
+  if(!emp){
+    // fallback: fetch from API
+    try{var d=await api('/api/employees?id='+session.employeeId);emp=d.employee||d.employees&&d.employees[0];}catch(e){}
+  }
+  if(!emp){showToast('Could not load your profile',true);return;}
+  el('mypro-cell').value=emp.cellPhone||'';
+  el('mypro-email').value=emp.email||'';
+  el('mypro-office').value=emp.officePhone||'';
+  el('mypro-home').value=emp.homePhone||'';
+  el('mypro-ec-name').value=emp.emergencyName||'';
+  el('mypro-ec-phone').value=emp.emergencyPhone||'';
+  el('mypro-ec-rel').value=emp.emergencyRelation||'';
+  el('mypro-error').style.display='none';
+  el('mypro-success').style.display='none';
+  el('my-profile-modal').classList.remove('hidden');
+}
+
+async function saveMyProfile(){
+  var btn=el('mypro-submit');
+  var errEl=el('mypro-error'),sucEl=el('mypro-success');
+  errEl.style.display='none';sucEl.style.display='none';
+  var payload={
+    id:session.employeeId,
+    cellPhone:el('mypro-cell').value.trim(),
+    email:el('mypro-email').value.trim(),
+    officePhone:el('mypro-office').value.trim(),
+    homePhone:el('mypro-home').value.trim(),
+    emergencyName:el('mypro-ec-name').value.trim(),
+    emergencyPhone:el('mypro-ec-phone').value.trim(),
+    emergencyRelation:el('mypro-ec-rel').value.trim()
+  };
+  if(!payload.id){errEl.textContent='Could not identify your account. Please sign out and back in.';errEl.style.display='';return;}
+  var orig=btn.innerHTML;btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="font-size:13px"></i> Saving…';
+  try{
+    var updated=await api('/api/employees',{method:'PATCH',body:JSON.stringify(payload)});
+    // Update local data so profile and directory reflect changes immediately
+    var idx=allEmployees?allEmployees.findIndex(function(e){return e.id===session.employeeId;}):-1;
+    if(idx>-1)allEmployees[idx]=updated;
+    if(currentEmployee&&currentEmployee.id===session.employeeId)currentEmployee=updated;
+    doSearch();
+    sucEl.textContent='Your profile has been updated.';sucEl.style.display='';
+    el('mypro-cell').value=updated.cellPhone||'';
+    el('mypro-email').value=updated.email||'';
+    el('mypro-office').value=updated.officePhone||'';
+    el('mypro-home').value=updated.homePhone||'';
+    el('mypro-ec-name').value=updated.emergencyName||'';
+    el('mypro-ec-phone').value=updated.emergencyPhone||'';
+    el('mypro-ec-rel').value=updated.emergencyRelation||'';
+  }catch(e){
+    errEl.textContent=e.message||'Could not save profile';errEl.style.display='';
+  }finally{btn.disabled=false;btn.innerHTML=orig;}
+}
+
+async function loadFileRequestsCount(){
+  try{
+    var data = await api('/api/vacation?all=1');
+    var requests = (data.requests||[]).filter(function(r){ return r.status==='Manager Approved'; });
+    var badge = el('file-requests-count');
+    var btn = el('file-requests-btn');
+    if(requests.length > 0){
+      badge.textContent = requests.length;
+      badge.style.display = '';
+      btn.style.borderColor = '#EF9F27';
+      btn.style.background = 'rgba(239,159,39,0.2)';
+    } else {
+      badge.style.display = 'none';
+      btn.style.borderColor = 'rgba(255,255,255,0.3)';
+      btn.style.background = 'rgba(255,255,255,0.1)';
+    }
+  }catch(e){}
+}
+
+</script>
+
+
+<!-- EDIT SLIDE-IN PANEL -->
+<div id="edit-panel-overlay" class="edit-panel-overlay" onclick="cancelEdit()"></div>
+<div id="edit-panel" class="edit-panel">
+  <div class="edit-panel-header">
+    <h3 id="edit-panel-title">Edit profile</h3>
+    <button onclick="cancelEdit()" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.8);font-size:22px;line-height:1;padding:0"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="edit-panel-body" id="edit-panel-body">
+    <div class="edit-form">
+        <input type="hidden" id="edit-id"/>
+        <div class="photo-upload">
+          <div class="photo-preview" id="edit-photo-preview" style="cursor:pointer" onclick="el('photo-file-input').click()" title="Click to change photo"></div>
+          <div>
+            <div style="font-size:13px;font-weight:500;margin-bottom:4px">Profile photo</div>
+            <input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)"/>
+            <button type="button" class="btn-sm" onclick="el('photo-file-input').click()" style="font-size:12px;margin-bottom:4px">
+              <i class="ti ti-upload" style="font-size:12px"></i> Upload photo
+            </button>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px" id="photo-upload-status">JPG, PNG — max 5MB</div>
+          </div>
+        </div>
+        <div class="section-divider">Basic info</div>
+        <div class="field edit-admin-only" id="status-field"><label>Status</label>
+          <select id="edit-active">
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Full name *</label>
+          <input type="text" id="edit-name" placeholder="Troy Johnston"/>
+        </div>
+        <div class="field edit-basic-hidden">
+          <label>Job title</label>
+          <div id="edit-title-checks" style="display:grid;grid-template-columns:repeat(2,1fr);gap:5px;padding:6px 0">
+            <div style="font-size:12px;color:var(--muted)">Loading...</div>
+          </div>
+        </div>
+        <div class="field edit-basic-hidden"><label>Manager</label>
+          <select id="edit-manager"><option value="">— Select manager —</option></select>
+        </div>
+        <div class="field edit-basic-hidden"><label>Depot</label>
+          <select id="edit-depot">
+            <option value="">— Select depot —</option>
+            <option>Mazerolle Depot</option>
+            <option>Oromocto - Head Office / Depot</option>
+            <option>Bagdad Depot</option>
+            <option>River Glade Depot</option>
+          </select>
+        </div>
+        <div class="field edit-basic-hidden"><label>Department</label>
+          <div id="edit-dept-checks" style="display:flex;flex-wrap:wrap;gap:8px;padding:6px 0">
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" value="Operations" onchange="updateDeptLabel()"> Operations</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" value="Administration" onchange="updateDeptLabel()"> Administration</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" value="Safety" onchange="updateDeptLabel()"> Safety</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" value="Fleet" onchange="updateDeptLabel()"> Fleet</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" value="HR" onchange="updateDeptLabel()"> HR</label>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field edit-basic-hidden"><label>Start date</label><input type="date" id="edit-start"/></div>
+          <div class="field edit-basic-hidden"><label>End date</label><input type="date" id="edit-end"/></div>
+        </div>
+        <div class="field" id="dob-field"><label>Date of birth</label><input type="date" id="edit-dob"/></div>
+        <div class="field edit-basic-hidden">
+          <label>Employment type</label>
+          <select id="edit-emp-status">
+            <option value="">— Select —</option>
+            <option value="Full Time">Full Time</option>
+            <option value="Part Time">Part Time</option>
+            <option value="Contract">Contract</option>
+            <option value="CO-OP Student">CO-OP Student</option>
+          </select>
+        </div>
+        <div class="field" style="display:none"><label>Training Employee ID <span style="font-size:11px;color:var(--muted)">(links to Safety App)</span></label>
+          <input type="text" id="edit-training-id" placeholder="Employee ID used in the safety app"/>
+        </div>
+        <div class="section-divider">Contact</div>
+        <div class="field-row">
+          <div class="field"><label>Email</label><input type="email" id="edit-email" placeholder="email@mrdc.ca"/></div>
+          <div class="field"><label>Cell phone</label><input type="tel" id="edit-cell" placeholder="(506) 555-0100"/></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Office phone</label><input type="tel" id="edit-office-phone" placeholder="(506) 555-0200"/></div>
+          <div class="field"><label>Home phone</label><input type="tel" id="edit-home-phone" placeholder="(506) 555-0300"/></div>
+        </div>
+        <div class="section-divider" id="ec-section-label">Emergency contact</div>
+        <div class="field-row">
+          <div class="field"><label>Name</label><input type="text" id="edit-ec-name" placeholder="Jane Johnston"/></div>
+          <div class="field"><label>Relation</label><input type="text" id="edit-ec-rel" placeholder="Spouse"/></div>
+        </div>
+        <div class="field"><label>Phone</label><input type="tel" id="edit-ec-phone" placeholder="(506) 555-0200"/></div>
+        <div class="field" id="notes-field"><label>Notes</label><textarea class="edit-admin-only" id="edit-notes" placeholder="Any additional notes…"></textarea></div>
+        <div id="fob-section">
+          <div class="section-divider">Access &amp; Equipment</div>
+          <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 8px">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border)" id="door-fob-label">
+              <input type="checkbox" id="edit-door-fob" style="width:16px;height:16px;accent-color:var(--navy);flex-shrink:0" onchange="toggleFobHighlight('door-fob-label',this.checked)"/>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text)">Door FOB</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:1px">Notify IT Manager to issue building access FOB</div>
+              </div>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border)" id="driver-fob-label">
+              <input type="checkbox" id="edit-driver-fob" style="width:16px;height:16px;accent-color:var(--navy);flex-shrink:0" onchange="toggleFobHighlight('driver-fob-label',this.checked)"/>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text)">Driver FOB</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:1px">Notify Fleet Manager to issue vehicle access FOB</div>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div id="license-edit-section" style="display:none">
+          <div class="section-divider">Driver's license</div>
+          <div class="field-row">
+            <div class="field"><label>License number</label><input type="text" id="edit-lic-num" placeholder="A1234567"/></div>
+            <div class="field"><label>Class</label><input type="text" id="edit-lic-class" placeholder="5"/></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Expiry date</label><input type="date" id="edit-lic-expiry"/></div>
+            <div class="field"><label>Province / State issued</label><input type="text" id="edit-lic-province" placeholder="NB"/></div>
+          </div>
+          <div class="field"><label>Restrictions</label><input type="text" id="edit-lic-restrictions" placeholder="None"/></div>
+          <div class="field"><label>Endorsements</label><input type="text" id="edit-lic-endorsements" placeholder="e.g. Air brakes, School bus"/></div>
+          <div class="field"><label>License photo</label><div style="font-size:12px;color:var(--muted);padding:4px 0">Upload via Airtable — field: <code style="background:var(--bg);padding:1px 5px;border-radius:4px">License Photo</code></div></div>
+          <div class="field-row" style="margin-top:0.75rem">
+            <div class="field"><label>Abstract date obtained</label><input type="date" id="edit-abstract-date"/></div>
+            <div class="field"><label>Abstract file</label><div style="font-size:12px;color:var(--muted);padding:8px 0">Upload via Airtable directly</div></div>
+          </div>
+        </div>
+
+      </div>
+      
+  </div>
+  <div class="edit-panel-footer">
+    <button class="btn-sm danger" id="panel-delete-btn" style="display:none;margin-right:auto" onclick="deleteEmployee()"><i class="ti ti-trash" style="font-size:13px"></i> Delete</button>
+    <button class="btn-sm" onclick="cancelEdit()"><i class="ti ti-x" style="font-size:13px"></i> Cancel</button>
+    <button class="btn-sm primary" onclick="saveEmployee()"><i class="ti ti-device-floppy" style="font-size:13px"></i> Save changes</button>
+  </div>
+</div>
+
+
+<!-- MY REQUESTS MODAL -->
+<div id="my-requests-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeMyRequestsModal()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:620px">
+    <div class="modal-header">
+      <div class="modal-photo" style="background:rgba(255,255,255,0.2)"><i class="ti ti-history" style="font-size:1.4rem;color:#fff"></i></div>
+      <div><div class="modal-name">My Leave Requests</div><div class="modal-subtitle" id="my-requests-subtitle">Loading...</div></div>
+    </div>
+    <div style="padding:1.25rem 1.5rem;max-height:60vh;overflow-y:auto"><div id="my-requests-list"><div class="loading">Loading...</div></div></div>
+    <div class="modal-footer"><button class="btn-sm" onclick="closeMyRequestsModal()"><i class="ti ti-x" style="font-size:13px"></i> Close</button></div>
+  </div>
+</div>
+<!-- ALL REQUESTS MODAL -->
+<div id="all-requests-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeAllRequestsModal()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:680px">
+    <div class="modal-header">
+      <div class="modal-photo" style="background:rgba(255,255,255,0.2)"><i class="ti ti-list" style="font-size:1.4rem;color:#fff"></i></div>
+      <div><div class="modal-name" id="all-requests-title">Leave Requests</div><div class="modal-subtitle" id="all-requests-subtitle">Loading...</div></div>
+    </div>
+    <div style="padding:0.75rem 1.5rem;border-bottom:1px solid var(--border)">
+      <select id="all-requests-filter" onchange="filterAllRequests()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;background:#fff">
+        <option value="">All statuses</option>
+        <option value="Pending">Pending</option>
+        <option value="Manager Approved">Manager Approved</option>
+        <option value="Filed">Filed</option>
+        <option value="Denied">Denied</option>
+      </select>
+    </div>
+    <div style="padding:1.25rem 1.5rem;max-height:55vh;overflow-y:auto"><div id="all-requests-list"><div class="loading">Loading...</div></div></div>
+    <div class="modal-footer"><button class="btn-sm" onclick="closeAllRequestsModal()"><i class="ti ti-x" style="font-size:13px"></i> Close</button></div>
+  </div>
+</div>
+
+
+<!-- PENDING APPROVALS MODAL -->
+<div id="all-leave-modal" class="modal-overlay hidden" onclick="if(event.target===this)el('all-leave-modal').classList.add('hidden')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:680px">
+    <div class="modal-header">
+      <div class="modal-photo" style="background:rgba(255,255,255,0.2)"><i class="ti ti-clock-check" style="font-size:1.4rem;color:#fff"></i></div>
+      <div><div class="modal-name">All Leave Requests</div><div class="modal-subtitle" id="all-leave-subtitle">Loading...</div></div>
+    </div>
+    <div style="padding:1.25rem 1.5rem;max-height:60vh;overflow-y:auto">
+      <div id="all-leave-list"><div class="loading">Loading...</div></div>
+    </div>
+    <div class="modal-footer"><button class="btn-sm" onclick="el('all-leave-modal').classList.add('hidden')"><i class="ti ti-x" style="font-size:13px"></i> Close</button></div>
+  </div>
+</div>
+
+
+<!-- LEAVE REVIEW SLIDE-IN PANEL -->
+<div class="edit-panel-overlay" id="leave-review-overlay" onclick="closeLeaveReview()"></div>
+<div class="edit-panel" id="leave-review-panel">
+  <div class="edit-panel-header">
+    <h3>Review Leave Request</h3>
+    <button class="btn-sm ghost-white" onclick="closeLeaveReview()"><i class="ti ti-x" style="font-size:13px"></i></button>
+  </div>
+  <div class="edit-panel-body">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+      <div style="font-size:13px;color:var(--muted)" id="review-subtitle">--</div>
+      <div id="review-status-badge"></div>
+    </div>
+
+    <!-- Employee info -->
+    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px">
+      <div style="background:var(--navy);padding:10px 16px;display:flex;align-items:center;gap:8px">
+        <i class="ti ti-user" style="color:rgba(255,255,255,0.7);font-size:14px"></i>
+        <span style="color:#fff;font-size:12px;font-weight:600;letter-spacing:0.02em">Employee Information</span>
+      </div>
+      <div style="padding:12px 16px">
+        <div class="field-row">
+          <div class="field" style="margin-bottom:0"><label>Employee name</label><input type="text" id="review-emp-name" readonly style="background:var(--bg);color:var(--muted)"/></div>
+          <div class="field" style="margin-bottom:0"><label>Date of request</label><input type="date" id="review-date-of-request" disabled style="background:var(--bg);color:var(--muted)"/></div>
+        </div>
+        <div class="field" style="margin-bottom:0;margin-top:10px"><label>Manager</label><input type="text" id="review-manager-name" readonly style="background:var(--bg);color:var(--muted)"/></div>
+        <div class="field" style="margin-bottom:0;margin-top:10px"><label>Location</label><input type="text" id="review-location" readonly style="background:var(--bg);color:var(--muted)"/></div>
+      </div>
+    </div>
+
+    <!-- Leave rows -->
+    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px">
+      <div style="background:var(--navy);padding:10px 16px;display:flex;align-items:center;gap:8px">
+        <i class="ti ti-calendar" style="color:rgba(255,255,255,0.7);font-size:14px"></i>
+        <span style="color:#fff;font-size:12px;font-weight:600">Leave Requested</span>
+      </div>
+      <div style="padding:12px 16px" id="review-leave-rows"></div>
+      <div id="review-doctor-row" style="display:none;margin:0 16px 12px;background:#fff8ed;border:1.5px solid #EF9F27;border-radius:8px;padding:10px 14px;font-size:13px;color:#633806;font-weight:500"></div>
+    </div>
+
+    <!-- Details -->
+    <div id="review-details-card" style="display:none;background:var(--white);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px">
+      <div style="background:var(--navy);padding:10px 16px;display:flex;align-items:center;gap:8px">
+        <i class="ti ti-notes" style="color:rgba(255,255,255,0.7);font-size:14px"></i>
+        <span style="color:#fff;font-size:12px;font-weight:600">Details</span>
+      </div>
+      <div style="padding:12px 16px;font-size:13px;color:var(--text)" id="review-details-text"></div>
+    </div>
+
+    <!-- Approval trail -->
+    <div id="review-trail-card" style="display:none;background:var(--white);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px">
+      <div style="background:#4A7FC1;padding:10px 16px;display:flex;align-items:center;gap:8px">
+        <i class="ti ti-timeline" style="color:rgba(255,255,255,0.8);font-size:14px"></i>
+        <span style="color:#fff;font-size:12px;font-weight:600">Approval Trail</span>
+      </div>
+      <div style="padding:12px 16px" id="review-trail-body"></div>
+    </div>
+
+    <!-- Manager action -->
+    <div id="review-manager-action" style="display:none;background:var(--white);border:1.5px solid #4A7FC1;border-radius:10px;overflow:hidden;margin-bottom:12px">
+      <div style="background:#4A7FC1;padding:10px 16px;display:flex;align-items:center;gap:8px">
+        <i class="ti ti-user-check" style="color:rgba(255,255,255,0.9);font-size:14px"></i>
+        <span style="color:#fff;font-size:12px;font-weight:600">Manager Review</span>
+      </div>
+      <div style="padding:12px 16px">
+        <div class="field"><label>Notes (optional)</label><textarea id="leave-manager-notes" style="min-height:60px" placeholder="Any notes..."></textarea></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-sm primary" onclick="managerDecision('approve')" style="flex:1;justify-content:center;padding:9px"><i class="ti ti-check" style="font-size:13px"></i> Approve</button>
+          <button class="btn-sm danger" onclick="managerDecision('deny')" style="flex:1;justify-content:center;padding:9px"><i class="ti ti-x" style="font-size:13px"></i> Deny</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin/Terri Lee file action -->
+    <div id="review-admin-action" style="display:none;background:var(--white);border:1.5px solid var(--green);border-radius:10px;overflow:hidden;margin-bottom:12px">
+      <div style="background:var(--green);padding:10px 16px;display:flex;align-items:center;gap:8px">
+        <i class="ti ti-folder-check" style="color:rgba(255,255,255,0.9);font-size:14px"></i>
+        <span style="color:#fff;font-size:12px;font-weight:600">Administration - Acknowledge and File</span>
+      </div>
+      <div style="padding:12px 16px">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">This request has been approved by the manager. Click below to acknowledge and file it.</div>
+        <button class="btn-sm primary" onclick="fileLeaveRequest()" style="width:100%;justify-content:center;padding:9px;background:var(--green);border-color:var(--green)">
+          <i class="ti ti-folder-check" style="font-size:13px"></i> Acknowledge and File
+        </button>
+      </div>
+    </div>
+
+    <!-- Admin delete -->
+    <div id="review-admin-delete" style="display:none;padding-top:4px">
+      <button class="btn-sm danger" onclick="deleteLeaveRequest()" style="width:100%;justify-content:center">
+        <i class="ti ti-trash" style="font-size:13px"></i> Delete request
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- LEAVE CALENDAR MODAL -->
+<div id="calendar-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeCalendarModal()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:780px;width:95vw">
+    <div class="modal-header" style="padding:1.25rem 1.5rem">
+      <div style="display:flex;align-items:center;gap:12px;flex:1">
+        <button onclick="calendarNav(-1)" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:30px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px"><i class="ti ti-chevron-left"></i></button>
+        <div class="modal-name" id="calendar-month-label" style="flex:1;text-align:center">—</div>
+        <button onclick="calendarNav(1)" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:30px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px"><i class="ti ti-chevron-right"></i></button>
+      </div>
+      <button onclick="closeCalendarModal()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:20px;cursor:pointer;margin-left:12px;line-height:1"><i class="ti ti-x"></i></button>
+    </div>
+    <!-- Day headers -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1.5px solid var(--border)">
+      <div style="padding:8px 4px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Sun</div>
+      <div style="padding:8px 4px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Mon</div>
+      <div style="padding:8px 4px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Tue</div>
+      <div style="padding:8px 4px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Wed</div>
+      <div style="padding:8px 4px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Thu</div>
+      <div style="padding:8px 4px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Fri</div>
+      <div style="padding:8px 4px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Sat</div>
+    </div>
+    <!-- Calendar grid -->
+    <div id="calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);min-height:360px">
+      <div class="loading" style="grid-column:span 7">Loading...</div>
+    </div>
+    <!-- Legend -->
+    <div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;background:var(--bg);border-radius:0 0 16px 16px">
+      <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#4A7FC1;display:inline-block"></span>Annual Vacation</span>
+      <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#E07B39;display:inline-block"></span>Sick Leave</span>
+      <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#6B5EA8;display:inline-block"></span>Bereavement</span>
+      <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#0F6E56;display:inline-block"></span>Other</span>
+    </div>
+  </div>
+</div>
+
+<!-- DAY DETAIL MODAL -->
+<div id="calendar-day-modal" class="modal-overlay hidden" onclick="if(event.target===this)el('calendar-day-modal').classList.add('hidden')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-photo" style="background:rgba(255,255,255,0.2)"><i class="ti ti-calendar-event" style="font-size:1.4rem;color:#fff"></i></div>
+      <div><div class="modal-name" id="cal-day-title">—</div><div class="modal-subtitle" id="cal-day-subtitle">—</div></div>
+    </div>
+    <div style="padding:1rem 1.5rem;max-height:50vh;overflow-y:auto" id="cal-day-list"></div>
+    <div class="modal-footer"><button class="btn-sm" onclick="el('calendar-day-modal').classList.add('hidden')"><i class="ti ti-x" style="font-size:13px"></i> Close</button></div>
+  </div>
+</div>
+
+
+<!-- RESET PASSWORD MODAL -->
+<div id="reset-password-modal" class="modal-overlay hidden" onclick="if(event.target===this)el('reset-password-modal').classList.add('hidden')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-photo" style="background:rgba(255,255,255,0.2)"><i class="ti ti-key" style="font-size:1.4rem;color:#fff"></i></div>
+      <div><div class="modal-name">Reset Password</div><div class="modal-subtitle">Admin only — update any user's password</div></div>
+    </div>
+    <div style="padding:1.25rem 1.5rem">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="rp-username" placeholder="tlee@mrdc.ca"/>
+      </div>
+      <div class="field">
+        <label>New password</label>
+        <div class="pw-wrap">
+          <input type="password" id="rp-password" placeholder="Min. 6 characters"/>
+          <button class="pw-eye" onclick="var i=el('rp-password');i.type=i.type==='password'?'text':'password'"><i class="ti ti-eye"></i></button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Confirm password</label>
+        <input type="password" id="rp-confirm" placeholder="Repeat password"/>
+      </div>
+      <div id="rp-error" style="display:none;background:#FFF0F0;border:1.5px solid #F0BEBE;border-radius:6px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:12px"></div>
+      <div id="rp-success" style="display:none;background:#E1F5EE;border:1.5px solid #6FCF97;border-radius:6px;padding:10px 14px;font-size:13px;color:#085041;margin-bottom:12px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="el('reset-password-modal').classList.add('hidden')"><i class="ti ti-x" style="font-size:13px"></i> Close</button>
+      <button class="btn-sm primary" onclick="doResetPassword()"><i class="ti ti-key" style="font-size:13px"></i> Reset password</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE MY PASSWORD MODAL -->
+<div id="change-password-modal" class="modal-overlay hidden" onclick="if(event.target===this)el('change-password-modal').classList.add('hidden')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-photo" style="background:rgba(255,255,255,0.2)"><i class="ti ti-lock" style="font-size:1.4rem;color:#fff"></i></div>
+      <div><div class="modal-name">Change My Password</div><div class="modal-subtitle">Update the password for your own account</div></div>
+    </div>
+    <div style="padding:1.25rem 1.5rem">
+      <div class="field">
+        <label>Current password</label>
+        <div class="pw-wrap">
+          <input type="password" id="cp-current" placeholder="Your current password" autocomplete="current-password"/>
+          <button class="pw-eye" onclick="var i=el('cp-current');i.type=i.type==='password'?'text':'password'"><i class="ti ti-eye"></i></button>
+        </div>
+      </div>
+      <div class="field">
+        <label>New password</label>
+        <div class="pw-wrap">
+          <input type="password" id="cp-new" placeholder="Min. 6 characters" autocomplete="new-password"/>
+          <button class="pw-eye" onclick="var i=el('cp-new');i.type=i.type==='password'?'text':'password'"><i class="ti ti-eye"></i></button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Confirm new password</label>
+        <input type="password" id="cp-confirm" placeholder="Repeat new password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doChangeMyPassword()"/>
+      </div>
+      <div id="cp-error" style="display:none;background:#FFF0F0;border:1.5px solid #F0BEBE;border-radius:6px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:12px"></div>
+      <div id="cp-success" style="display:none;background:#E1F5EE;border:1.5px solid #6FCF97;border-radius:6px;padding:10px 14px;font-size:13px;color:#085041;margin-bottom:12px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="el('change-password-modal').classList.add('hidden')"><i class="ti ti-x" style="font-size:13px"></i> Close</button>
+      <button class="btn-sm primary" id="cp-submit" onclick="doChangeMyPassword()"><i class="ti ti-lock" style="font-size:13px"></i> Change password</button>
+    </div>
+  </div>
+</div>
+
+<!-- MY PROFILE MODAL -->
+<div id="my-profile-modal" class="modal-overlay hidden" onclick="if(event.target===this)el('my-profile-modal').classList.add('hidden')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-photo" style="background:rgba(255,255,255,0.2)"><i class="ti ti-user-edit" style="font-size:1.4rem;color:#fff"></i></div>
+      <div><div class="modal-name">My Profile</div><div class="modal-subtitle">Update your contact &amp; emergency information</div></div>
+    </div>
+    <div style="padding:1.25rem 1.5rem">
+      <p style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin:0 0 10px;padding-top:4px">Contact Information</p>
+      <div class="field-row">
+        <div class="field"><label>Cell Phone</label><input type="tel" id="mypro-cell" placeholder="e.g. 506-555-0100" autocomplete="tel"/></div>
+        <div class="field"><label>Email</label><input type="email" id="mypro-email" placeholder="your@email.com" autocomplete="email"/></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Office Phone</label><input type="tel" id="mypro-office" placeholder="Office number"/></div>
+        <div class="field"><label>Home Phone</label><input type="tel" id="mypro-home" placeholder="Home number"/></div>
+      </div>
+      <p style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin:0 0 10px;padding-top:4px" style="margin-top:1rem">Emergency Contact</p>
+      <div class="field-row">
+        <div class="field"><label>Name</label><input type="text" id="mypro-ec-name" placeholder="Full name" autocomplete="off"/></div>
+        <div class="field"><label>Relationship</label><input type="text" id="mypro-ec-rel" placeholder="e.g. Spouse, Parent"/></div>
+      </div>
+      <div class="field"><label>Phone</label><input type="tel" id="mypro-ec-phone" placeholder="Emergency contact number" onkeydown="if(event.key==='Enter')saveMyProfile()"/></div>
+      <div id="mypro-error" style="display:none;background:#FFF0F0;border:1.5px solid #F0BEBE;border-radius:6px;padding:10px 14px;font-size:13px;color:var(--red);margin-top:10px"></div>
+      <div id="mypro-success" style="display:none;background:#E1F5EE;border:1.5px solid #6FCF97;border-radius:6px;padding:10px 14px;font-size:13px;color:#085041;margin-top:10px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="el('my-profile-modal').classList.add('hidden')"><i class="ti ti-x" style="font-size:13px"></i> Close</button>
+      <button class="btn-sm primary" id="mypro-submit" onclick="saveMyProfile()"><i class="ti ti-device-floppy" style="font-size:13px"></i> Save changes</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
